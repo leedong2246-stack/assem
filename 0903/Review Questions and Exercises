@@ -1,1 +1,124 @@
+1. In an 8-bit binary number, which is the most significant bit (MSB)?
+ => 전체 8비트중 제일 왼쪽에 있는 자리이다
+2. What is the decimal representation of each of the following unsigned binary integers?
+  a.00110101 => 32 + 16 + 4 + 1 = 53
+  b.10010110 => 128 + 16 + 4 + 2 = 150
+  c. 11001100 => 28 + 64 + 8 + 4 = 204
 
+3. What is the sum of each pair of binary integers?
+  a.10101111 + 11011011 => 175 + 219 = 394 = 110001010
+  b.10010111 + 11111111 => 151 + 255 = 406 = 110010110
+  c.01110101 + 10101100 => 117 + 172 = 289 = 100100001
+4. Calculate binary 00001101 minus 00000111.
+=> 13 - 7 = 6 => 00000110
+5. How many bits are used by each of the following data types?
+a. word => 16비트 
+b. doubleword => 32비트
+c. quadword => 64비트
+d. double quadword => 128비트
+
+6. What is the minimum number of binary bits needed to represent each of the following
+unsigned decimal integers?
+a. 4095 => 2^12 - 1 = 4096 이므로 12비트 
+b. 65534 => 2^15 - 1 = 32767, 2^16 - 1 = 65535, 32767 < 65534 < 65535 이므로 16비트
+c. 42319 => 2^15 - 1 = 32767, 2^16 - 1 = 65535, 32767 < 65534 < 65535 이므로 16비트
+
+7. What is the hexadecimal representation of each of the following binary numbers?
+a. 0011 0101 1101 1010 => 35DA
+b. 1100 1110 1010 0011 => CEA3
+c. 1111 1110 1101 1011 => FEDB
+
+8. What is the binary representation of the following hexadecimal numbers?
+a. 0126F9D4 => 0000 0001 0010 0110 1111 1001 1101 0100
+b. 6ACDFA95 => 0110 1010 1100 1101 1111 1010 1001 0101 
+c. F69BDC2A => 1111 0110 1001 1011 1101 1100 0010 1010
+
+9. What is the unsigned decimal representation of each of the following hexadecimal integers?
+a. 3A => 3 * 16 + 10 = 58
+b. 1BF => 1 * 256 + 11 * 16 + 15 = 447
+c. 1001 => 1 * 4096 + 1 = 4097
+
+10. What is the unsigned decimal representation of each of the following hexadecimal integers?
+a. 62 => 6 * 16 + 2 = 98
+b. 4B3 => 4 * 256 + 11 * 16 + 3 = 1203
+c. 29F => 2 * 256 + 9 * 16 + 15 = 671
+
+11. What is the 16-bit hexadecimal representation of each of the following signed decimal integers?
+a.-24 => 65536 − 24 = 65512 => FFE8
+b.-331 => 65536 − 331 = 65205 => FEB5
+
+12. What is the 16-bit hexadecimal representation of each of the following signed decimal integers?
+a.-21 => 65536 − 21 = 65515 => FFEB
+b.-45 => 65536 − 45 = 65491 => FFD3
+
+13. The following 16-bit hexadecimal numbers represent signed integers. Convert each to
+decimal.
+a. 6BF9 => 6 * 4096 + 11 * 256 + 15 * 16 + 9 = 27641
+b. C123 => − (65536 − C123) = −(65536−49443) = −16093
+
+14. The following 16-bit hexadecimal numbers represent signed integers. Convert each to
+decimal.
+a. 4CD2 => 4 * 4096 + 12 * 256 + 13 * 16 + 2 = 19666
+b. 8230 => -(65536 - 33328) = -32208
+
+15. What is the decimal representation of each of the following signed binary numbers?
+a. 10110101 => (반전후 + 1) 01001010 + 1 -> 01001011 = -75
+b. 00101010 => 32 + 8 + 2 = 42
+c. 11110000 => (반전후 + 1) 00001111 + 1 -> 00010000 = -16
+
+16. What is the decimal representation of each of the following signed binary numbers?
+a. 10000000 => -128
+b. 11001100 => (반전후 + 1) 00110011 + 1 -> 00110100 = -52
+c. 10110111 => (반전후 + 1) 01001000 + 1 -> 01001001 = -73
+
+17. What is the 8-bit binary (two’s-complement) representation of each of the following signed
+decimal integers?
+a.-5 => 00000101 -> (반전후 + 1) 11111010 + 1 -> 11111011 
+b.-42 => 00101010 -> (반전후 + 1) 11010101 + 1 -> 11010110
+c.-16 => 00010000 -> (반전후 + 1) 11101111 + 1 -> 11110000
+
+18. What is the 8-bit binary (two’s-complement) representation of each of the following signed
+decimal integers?
+a.-72 => 01001000(72) -> (반전후 + 1) 10110111 + 1 -> 10111000 
+b.-98 => 01100010(98) -> (반전후 + 1) 10011101 + 1 -> 10011110
+c.-26 => 00011010(26) -> (반전후 + 1) 11100101 + 1 -> 11100110
+
+19. What is the sum of each pair of hexadecimal integers?
+a. 6B4 + 3FE => 1716 + 1022 + 2738 = A12
+b. A49 + 6BD => 2633 + 1725 + 4358 = 1106
+
+20. What is the sum of each pair of hexadecimal integers?
+a. 7C4 + 3BE => 1988 + 958 + 2946 = B82
+b. B69 + 7AD => 2921 + 1965 + 4886 = 1316
+
+21. What are the hexadecimal and decimal representations of the ASCII character capital B?
+-> 10진수 : 66, 16진수 : 42
+22. What are the hexadecimal and decimal representations of the ASCII character capital G?
+-> 10진수 : 71, 16진수 : 47
+23. Challenge: What is the largest decimal value you can represent, using a 129-bit unsigned
+integer?
+-> 2^129 - 1 = 680,564,733,841,876,926,926,749,214,863,536,422,911
+24. Challenge: What is the largest decimal value you can represent, using a 86-bit signed
+integer?
+-> 2^85 - 1 = 38,685,626,227,668,133,590,597,375
+25. Create a truth table to show all possible inputs and outputs for the boolean function
+described by ¬(A∨B).
+->
+A B | A ∨B |  ¬(A∨B)
+0 0 |   0   |     1
+0 1 |   1   |     0
+1 0 |   1   |     0
+1 1 |   1   |     0
+26. Create a truth table to show all possible inputs and outputs for the boolean function
+described by (¬A∧¬B). How would you describe the rightmost column of this table in
+relation to the table from question number 25? Have you heard of De Morgan’s Theorem?
+->
+A B | ¬A ¬B |  (¬A∧¬B)
+0 0 | 1   1 |     1
+0 1 | 1   0 |     0
+1 0 | 0   1 |     0
+1 1 | 0   0 |     0  25번과 동일하고 드모르간 법칙을 이용한 것이다
+27. If a boolean function has four inputs, how many rows are required for its truth table?
+-> 불 함수 즉 0과 1로 참과 거짓을 나타내는 불 함수에 4개의 입력이 있다면 16개의 행이 필요하다
+28. How many selector bits are required for a four-input multiplexer?
+-> 4입력 멀티플렉서는 2^n = 4, n은 2개가 필요햐다
