@@ -1,0 +1,66 @@
+어셈블리
+
+1. Provide examples of three different instruction mnemonics.
+-> MOV, ADD, SUB
+2. What is a calling convention, and how is it used in assembly language declarations?
+-> 호출 규약(Calling convention)은 함수 호출 시 매개변수 전달 방법, 순서, 스택 정리 방법 등을 정한 약속입니다. 어셈블리에서는 .MODEL, PROTO, PROC 등에 사용하여 함수의 호출 규칙을 지정합니다.
+3. How do you reserve space for the stack in a program?
+-> .stack 지시자 사용 (예: .stack 4096)
+4. Explain why the term assembler language is not quite correct.
+-> '어셈블러'는 번역 프로그램의 이름이고, 언어의 명칭은 '어셈블리 언어'이기 때문
+5. Explain the difference between big endian and little endian. Also, look up the origins of this
+term on the Web.
+-> 빅 엔디안은 MSB가 낮은 주소에 저장되고, 리틀 엔디안은 LSB가 낮은 주소에 저장됨. 어원은 소설 《걸리버 여행기》의 달걀 깨기 논쟁에서 유래함.
+6. Why might you use a symbolic constant rather than an integer literal in your code?
+-> 가독성 향상 및 코드 수정/유지보수의 용이성
+7. How is a source file different from a listing file?
+-> 소스 파일(.asm)은 작성된 원본 코드이고, 리스팅 파일(.lst)은 어셈블러가 생성한 주소 및 기계어가 포함된 파일임
+8. How are data labels and code labels different?
+-> 데이터 레이블은 콜론(:)을 붙이지 않고, 코드 레이블은 콜론(:)을 붙임
+9. (True/False): An identifier cannot begin with a numeric digit.
+-> True
+10. (True/False): A hexadecimal literal may be written as 0x3A.
+-> True
+11. (True/False): Assembly language directives execute at runtime.
+-> False
+12. (True/False): Assembly language directives can be written in any combination of uppercase
+and lowercase letters.
+-> True
+13. Name the four basic parts of an assembly language instruction.
+-> 레이블(Label), 연산자(Mnemonic), 피연산자(Operand), 주석(Comment)
+14. (True/False): MOV is an example of an instruction mnemonic.
+-> True
+15. (True/False): A code label is followed by a colon (:), but a data label does not end with a 
+colon.
+-> True
+16. Show an example of a block comment.
+-> COMMENT ! ... !
+17. Why is it not a good idea to use numeric addresses when writing instructions that access 
+variables?
+-> 데이터 위치가 변경될 때마다 모든 주소를 직접 수정해야 하므로 오류 발생 가능성이 높음
+  Review Questions and Exercises
+18. What type of argument must be passed to the ExitProcess procedure?
+-> 32비트 정수 (종료 코드)
+19. Which directive ends a procedure?
+-> ENDP
+20. In 32-bit mode, what is the purpose of the identifier in the END directive?
+-> 프로그램의 시작 지점(Entry point) 프로시저 지정
+21. What is the purpose of the PROTO directive?
+-> 프로시저의 프로토타입(선언) 정의
+22. (True/False): An Object file is produced by the Linker.
+-> False
+23. (True/False): A Listing file is produced by the Assembler.
+-> True
+24. (True/False): A link library is added to a program just before producing an Execut
+able file.
+-> True
+25. Which data directive creates a 32-bit signed integer variable?
+-> SDWORD
+26. Which data directive creates a 16-bit signed integer variable?
+-> SWORD
+27. Which data directive creates a 64-bit unsigned integer variable?
+-> QWORD
+28. Which data directive creates an 8-bit signed integer variable?
+-> SBYTE
+29. Which data directive creates a 10-byte packed BCD variable?
+-> TBYTE
