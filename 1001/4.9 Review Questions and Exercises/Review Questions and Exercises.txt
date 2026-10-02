@@ -1,0 +1,139 @@
+1. What will be the value in EDX after each of the lines marked (a) and (b) execute?
+
+.data
+one WORD 8002h
+two WORD 4321h
+.code
+mov   edx,21348041h
+movsx edx,one		; (a) EDX = FFFF8002h
+movsx edx,two		; (b) EDX = 00004321h
+
+2. What will be the value in EAX after the following lines execute?
+
+mov  eax,1002FFFFh
+inc  	ax
+-> EAX = 10020000h
+
+3. What will be the value in EAX after the following lines execute?
+
+mov  eax,30020000h
+dec 	ax
+-> EAX = 3002FFFFh
+
+4. What will be the value in EAX after the following lines execute?
+
+mov  eax,1002FFFFh
+neg 	ax
+-> EAX = 10020001h
+
+5. What will be the value of the Parity flag after the following lines execute?
+
+mov  al,1
+add  	al,3
+-> Parity Flag (PF) = 0
+
+6. What will be the value of EAX and the Sign flag after the following lines execute? 
+
+mov  eax,5
+sub  	eax,6
+-> EAX = FFFFFFFFh
+
+7. In the following code, the value in AL is intended to be a signed byte. Explain how the
+Overflow flag helps, or does not help you, to determine whether the final value in AL falls
+within a valid signed range.
+
+mov al,-1
+add  al,130
+-> Overflow flag(OF)는 0이 되며, 이는 결과가 올바른 부호 범위 내에 있음을 나타냅니다.
+
+8. What value will RAX contain after the following instruction executes?
+
+mov  rax,44445555h
+-> RAX = 0000000044445555h
+
+9. What value will RAX contain after the following instructions execute?
+
+.data	
+dwordVal DWORD 84326732h
+.code
+mov  rax,0FFFFFFFF00000000h
+mov  rax,dwordVal
+-> RAX = 0000000084326732h
+
+10. What value will EAX contain after the following instructions execute?
+
+.data
+dVal DWORD 12345678h
+.code
+mov  ax,3
+mov  WORD PTR dVal+2,ax
+mov  eax,dVal
+-> EAX = 00035678h
+	
+11. What will EAX contain after the following instructions execute?
+
+.data
+.dVal DWORD ?
+.code
+mov  dVal,12345678h
+mov  ax,WORD PTR dVal+2
+add  ax,3
+mov  WORD PTR dVal,ax
+mov  eax,dVal
+-> EAX = 12341237h
+
+12. (Yes/No): Is it possible to set the Overflow flag if you add a positive integer to a negative
+integer?
+-> No
+
+13. (Yes/No): Will the Overflow flag be set if you add a negative integer to a negative integer
+and produce a positive result?
+-> Yes
+
+14. (Yes/No): Is it possible for the NEG instruction to set the Overflow flag?
+-> Yes
+
+15. (Yes/No): Is it possible for both the Sign and Zero flags to be set at the same time?
+Use the following variable definitions for Questions 16–19:
+
+.data
+var1 SBYTE -4,-2,3,1
+var2 WORD 1000h,2000h,3000h,4000h
+var3 SWORD -16,-42
+var4 DWORD 1,2,3,4,5
+-> No
+
+16. For each of the following statements, state whether or not the instruction is valid:
+
+a.  mov   ax,var1? -> Invalid
+b.  mov   ax,var2 -> Valid
+c. mov   eax,var3 -> Invalid
+d. mov   var2,var3 -> Invalid
+e. movzx ax,var2 -> Invalid
+f.  movzx var2,al -> Invalid
+g.   mov   ds,ax -> Valid
+h.   mov   ds,1000h -> Invalid
+
+
+17. What will be the hexadecimal value of the destination operand after each of the following
+instructions execute in sequence?
+
+mov  al,var1		; a. -> AL = FCh (var1의 첫 번째 바이트 -4)
+mov  ah,[var1+3]		; b. -> AH = 01h (var1의 4번째 바이트 1)
+
+
+18. What will be the value of the destination operand after each of the following instructions
+execute in sequence?
+
+mov  ax,var2		; a. -> AX = 1000h (var2[0])
+mov  ax,[var2+4]		; b. ->  AX = 3000h (var2+4 바이트 위치 = 3번째 WORD)
+mov  ax,var3		; c. -> AX = FFF0h (var3[0] 값인 -16을 16진수로 표현)
+mov  ax,[var3-2]		; d. -> AX = 4000h (var3 바로 전 2바이트 메모리 위치 = var2의 마지막 값)
+
+19. What will be the value of the destination operand after each of the following instructions
+execute in sequence?
+
+mov    edx,var4		; a. -> EDX = 00000001h (var4[0])
+movzx  edx,var2		; b. -> EDX = 00001000h (var2[0]을 MOVZX로 32비트 zero-extension)
+mov    edx,[var4+4]	; c. -> EDX = 00000002h (var4+4 바이트 위치 = 2번째 DWORD)
+movsx  edx,var1		; d. -> EDX = FFFFFFFCh (var1[0] 값인 -4 / FCh를 MOVSX로 32비트 sign-extension)
