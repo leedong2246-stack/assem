@@ -1,0 +1,167 @@
+1. Converting from Big Endian to Little Endian 
+Write a program that uses the variables below and MOV instructions to copy the value from
+bigEndian to littleEndian, reversing the order of the bytes. The number’s 32-bit value is under
+stood to be 12345678 hexadecimal.
+
+.data
+bigEndian BYTE 12h,34h,56h,78h
+littleEndian DWORD?
+->
+mov al, [bigEndian + 3]
+mov BYTE PTR [littleEndian], al
+mov al, [bigEndian + 2]
+mov BYTE PTR [littleEndian + 1], al
+mov al, [bigEndian + 1]
+mov BYTE PTR [littleEndian + 2], al
+mov al, [bigEndian]
+mov BYTE PTR [littleEndian + 3], al
+
+2. Exchanging Pairs of Array Values
+Write a program with a loop and indexed addressing that exchanges every pair of values in an
+array with an even number of elements. Therefore, item i will exchange with item i+1, and item
+i+2 will exchange with item i+3, and so on.
+->
+.data
+array DWORD 10h, 20h, 30h, 40h, 50h, 60h   ; 짝수 개 요소
+
+.code
+mov ecx, LENGTHOF array / 2
+mov esi, 0
+
+L1:
+    mov eax, array[esi]
+    xchg eax, array[esi + 4]
+    mov array[esi], eax
+    add esi, 8
+    loop L1
+
+3. Summing the Gaps between Array Values
+Write a program with a loop and indexed addressing that calculates the sum of all the gaps
+between successive array elements. The array elements are doublewords, sequenced in nonde
+creasing order. So, for example, the array {0, 2, 5, 9, 10} has gaps of 2, 3, 4, and 1, whose sum
+equals 10.
+->
+.data
+array DWORD 0, 2, 5, 9, 10
+sum DWORD 0
+
+.code
+mov ecx, LENGTHOF array - 1
+mov esi, 0
+mov eax, 0
+
+L1:
+    mov edx, array[esi + 4]
+    sub edx, array[esi]
+    add eax, edx
+    add esi, TYPE array
+    loop L1
+
+mov sum, eax
+
+4. Copying a Word Array to a DoubleWord array
+Write a program that uses a loop to copy all the elements from an unsigned Word (16-bit) array
+into an unsigned doubleword (32-bit) array. 
+->
+.data
+wordArray  WORD  1000h, 2000h, 3000h
+dwordArray DWORD LENGTHOF wordArray DUP(?)
+
+.code
+mov ecx, LENGTHOF wordArray
+mov esi, 0
+mov edi, 0
+
+L1:
+    movzx eax, wordArray[esi]
+    mov dwordArray[edi], eax
+    add esi, TYPE wordArray
+    add edi, TYPE dwordArray
+    loop L1
+
+5. Fibonacci Numbers
+Write a program that uses a loop to calculate the first seven values of the Fibonacci number sequence,
+described by the following formula: Fib(1) = 1, Fib(2) = 1, Fib(n) = Fib(n – 1) + Fib(n – 2).
+->
+.data
+fib DWORD 7 DUP(?)
+
+.code
+mov fib[0], 1
+mov fib[4], 1
+mov ecx, 5              ; 계산할 남은 횟수 (7 - 2 = 5)
+mov esi, 8              ; fib[2]의 바이트 오프셋
+
+L1:
+    mov eax, fib[esi - 4]
+    add eax, fib[esi - 8]
+    mov fib[esi], eax
+    add esi, TYPE fib
+    loop L1
+
+6. Reverse an Array
+Use a loop with indirect or indexed addressing to reverse the elements of an integer array in
+place. Do not copy the elements to any other array. Use the SIZEOF, TYPE, and LENGTHOF
+operators to make the program as flexible as possible if the array size and type should be
+changed in the future.
+->
+.data
+array DWORD 1, 2, 3, 4, 5
+
+.code
+mov esi, 0
+mov edi, SIZEOF array - TYPE array
+mov ecx, LENGTHOF array / 2
+
+L1:
+    mov eax, array[esi]
+    xchg eax, array[edi]
+    mov array[esi], eax
+    add esi, TYPE array
+    sub edi, TYPE array
+    loop L1
+7. Copy a String in Reverse Order
+Write a program with a loop and indirect addressing that copies a string from source to target,
+reversing the character order in the process. Use the following variables:
+
+source BYTE "This is the source string",0
+target BYTE SIZEOF source DUP('#')
+->
+.data
+source BYTE "This is the source string",0
+target BYTE SIZEOF source DUP('#')
+
+.code
+mov esi, OFFSET source + SIZEOF source - 2  ; null 문자 전 마지막 문자 위치
+mov edi, OFFSET target
+mov ecx, SIZEOF source - 1                 ; 문자 개수 (null 제외)
+
+L1:
+    mov al, [esi]
+    mov [edi], al
+    dec esi
+    inc edi
+    loop L1
+
+mov BYTE PTR [edi], 0                      ; target 끝에 null 문자 삽입
+
+8. Shifting the Elements in an Array
+Using a loop and indexed addressing, write code that rotates the members of a 32-bit integer
+array forward one position. The value at the end of the array must wrap around to the first posi
+tion. For example, the array [10,20,30,40] would be transformed into [40,10,20,30].
+->
+.data
+array DWORD 10, 20, 30, 40
+
+.code
+mov ecx, LENGTHOF array - 1
+mov esi, SIZEOF array - TYPE array
+mov eax, array[esi]                         ; 마지막 요소(40) 백업
+
+L1:
+    mov edx, array[esi - 4]
+    mov array[esi], edx
+    sub esi, TYPE array
+    loop L1
+
+mov array[0], eax                           ; 백업된 마지막 요소를 맨 앞에 저장
