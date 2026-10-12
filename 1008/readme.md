@@ -30,4 +30,10 @@ cmp  al,00000111b		; c. CF=   ZF=   SF=
     jl   L1
     mov  edx,0
 L1:
-
+14. What will be the final value in EDX after this code executes?
+    mov  edx,1
+    mov  eax,7FFFh
+    cmp  eax,0FFFF8000h
+    jl   L2
+    mov  edx,0
+L2: 
