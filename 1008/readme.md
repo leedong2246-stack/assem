@@ -37,3 +37,8 @@ L1:
     jl   L2
     mov  edx,0
 L2: 
+1. Write a single instruction that converts an ASCII digit in AL to its corresponding binary
+value. If AL already contains a binary value (00h to 09h), leave it unchanged
+-> and al, 0Fh
+문자 '5' = 35h (2진수: 0011 0101)
+진짜 숫자 5 = 05h (2진수: 0000 0101)
