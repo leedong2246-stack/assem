@@ -1,2 +1,2 @@
-cmp는 빼기\n
-TEST는 and\n
+cmp는 빼기 <br>
+TEST는 and <br>
