@@ -7,6 +7,7 @@ JB = 부호 없을 때 더 작은 수인가 <br>
 jg = 부호가 있을 때 더 큰 수인가 <br>
 ja = 부호 없을 때 더 큰 수 인가 <br>
 jae, jge, jbe, jle = ~~~하거나 같다
+jz = (Jump if Zero) 앞에 연산 결과가 0이면 Jump해라
 Parity = 데이터 안에 숫자 1이 짝수개 들어있는지, 홀수개 들어있는지 세는 것 <br>
 BYTE = 1바이트 (8비트) <br>
 WORD = 2바이트 (16비트) <br>
