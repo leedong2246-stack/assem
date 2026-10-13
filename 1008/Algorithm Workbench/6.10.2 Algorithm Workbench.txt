@@ -1,0 +1,165 @@
+1. Write a single instruction that converts an ASCII digit in AL to its corresponding binary value. If AL already contains a binary value (00h to 09h), leave it unchanged.
+-> and al, 0Fh
+
+2. Write instructions that calculate the parity of a 32-bit memory operand. Hint: Use the for mula presented earlier in this section: B0 XOR B1 XOR B2 XOR B3.
+-> 
+mov al, BYTE PTR [memVal]
+xor al, BYTE PTR [memVal + 1]   
+xor al, BYTE PTR [memVal + 2]   
+xor al, BYTE PTR [memVal + 3]   
+
+3. Given two bit-mapped sets named SetX and SetY, write a sequence of instructions that gen-erate a bit string in EAX that represents members in SetX that are not members of SetY.
+->
+mov eax, SetY
+not eax
+and eax, SetX
+
+4. Write instructions that jump to label L1 when the unsigned integer in DX is less than or equal to the integer in CX.
+-> 
+cmp DX, CX
+jbe L1
+
+5. Write instructions that jump to label L2 when the signed integer in AX is greater than the integer in CX.
+-> 
+cmp AX, CX
+jg L2
+6. Write instructions that first clear bits 0 and 1 in AL. Then, if the destination operand is equal to zero, the code should jump to label L3. Otherwise, it should jump to label L4.
+-> 
+and AL, 11111100b
+jz L3
+jmp L4
+
+7. Implement the following pseudocode in assembly language. Use short-circuit evaluation and assume that val1 and X are 32-bit variables.
+if( val1 > ecx ) AND ( ecx > edx ) 
+   X = 1
+else
+   X = 2;
+->
+cmp val1, ecx
+jle LOW
+cmp ecx, edx
+jle LOW
+
+mov X, 1
+jmp END
+
+LOW
+mox X, 2
+
+END
+
+8. Implement the following pseudocode in assembly language. Use short-circuit evaluation
+and assume that X is a 32-bit variable.
+if( ebx > ecx ) OR ( ebx > val1 ) 
+   X = 1
+else
+   X = 2
+-> 
+    cmp ebx, ecx
+    jg L_THEN
+
+    cmp ebx, val1
+    jg L_THEN
+
+    mov X, 2
+    jmp L_END
+
+L_THEN:
+    mov X, 1
+
+L_END:
+
+9. Implement the following pseudocode in assembly language. Use short-circuit evaluation
+and assume that X is a 32-bit variable.
+if( ebx > ecx AND ebx > edx) OR ( edx > eax ) 
+   X = 1
+else
+   X = 2
+-> 
+    cmp ebx, ecx
+    jle L_CHECK_OR
+
+    cmp ebx, edx
+    jg L_THEN
+
+L_CHECK_OR:
+    cmp edx, eax
+    jg L_THEN
+
+    mov X, 2
+    jmp L_END
+
+L_THEN:
+    mov X, 1
+
+L_END:
+
+10. Implement the following pseudocode in assembly language. Use short-circuit evaluation
+and assume that A, B, and N are 32-bit signed integers. 
+while N > 0
+  if N != 3 AND (N < A OR N > B)
+  N = N – 2
+  else
+     N = N – 1
+end whle
+-> 
+L_WHILE:
+    cmp N, 0
+    jle L_WHILE_END
+
+    cmp N, 3
+    je L_ELSE
+
+    cmp N, A
+    jl L_THEN
+
+    cmp N, B
+    jg L_THEN
+
+    jmp L_ELSE
+
+L_THEN:
+    sub N, 2
+    jmp L_WHILE
+
+L_ELSE:
+    sub N, 1
+    jmp L_WHILE
+
+L_WHILE_END:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
