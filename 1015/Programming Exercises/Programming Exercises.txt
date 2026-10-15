@@ -1,0 +1,549 @@
+When you write programs to solve the programming exercises, use multiple procedures when
+possible. Follow the style and naming conventions used in this book, unless instructed otherwise
+by your instructor. Use explanatory comments in your programs at the beginning of each proce
+dure and next to nontrivial statements.
+
+1. Draw Text Colors
+Write a program that displays the same string in four different colors, using a loop. Call the Set
+TextColor procedure from the book’s link library. Any colors may be chosen, but you may find
+it easiest to change the foreground color.
+INCLUDE Irvine32.inc
+
+.data
+str1 BYTE "This text is displayed in different colors!", 0
+colors DWORD yellow + (black * 16), lightGreen + (black * 16), \
+             lightCyan + (black * 16), lightRed + (black * 16)
+
+.code
+main PROC
+    mov ecx, 4
+    mov esi, 0
+
+L1:
+    mov eax, colors[esi * 4]
+    call SetTextColor
+    mov edx, OFFSET str1
+    call WriteString
+    call Crlf
+    inc esi
+    loop L1
+
+    ; 색상 초기화 (흰색 글자 / 검은색 배경)
+    mov eax, white + (black * 16)
+    call SetTextColor
+    exit
+main ENDP
+END main
+
+2. Linking Array Items
+Suppose you are given three data items that indicate a starting index in a list, an array of charac
+ters, and an array of link index. You are to write a program that traverses the links and locates the
+characters in their correct sequence. For each character you locate, copy it to a new array. Sup
+pose you used the following sample data, and assumed the arrays use zero-based indexes:
+start = 1
+chars:	H A C E B D F G
+links:		0 4 5 6 2 3 7 0
+
+INCLUDE Irvine32.inc
+
+.data
+start DWORD 1
+chars BYTE  'H','A','C','E','B','D','F','G'
+links DWORD 0, 4, 5, 6, 2, 3, 7, 0
+output BYTE LENGTHOF chars DUP(?)
+
+.code
+main PROC
+    mov esi, start
+    mov edi, OFFSET output
+    mov ecx, LENGTHOF chars
+
+L1:
+    ; 문자 복사
+    mov al, chars[esi]
+    mov [edi], al
+    inc edi
+
+    ; 다음 인덱스로 이동
+    mov esi, links[esi * 4]
+    loop L1
+
+    ; 결과 출력
+    mov edx, OFFSET output
+    mov ecx, LENGTHOF chars
+    call WriteString
+    call Crlf
+
+    exit
+main ENDP
+END main	
+
+Then the values copied (in order) to the output array would be A,B,C,D,E,F,G,H. Declare the
+character array as type BYTE, and to make the problem more interesting, declare the links array
+type DWORD.
+
+3. Simple Addition (1)
+Write a program that clears the screen, locates the cursor near the middle of the screen, prompts
+the user for two integers, adds the integers, and displays their sum.
+
+INCLUDE Irvine32.inc
+
+.data
+prompt1 BYTE "Enter first integer: ", 0
+prompt2 BYTE "Enter second integer: ", 0
+sumMsg  BYTE "The sum is: ", 0
+
+.code
+main PROC
+    call Clrscr
+
+    ; 화면 중앙 부근(행: 10, 열: 20)으로 커서 이동
+    mov dh, 10
+    mov dl, 20
+    call Gotoxy
+
+    ; 첫 번째 정수 입력
+    mov edx, OFFSET prompt1
+    call WriteString
+    call ReadInt
+    mov ebx, eax
+
+    ; 두 번째 정수 입력
+    mov dh, 11
+    mov dl, 20
+    call Gotoxy
+    mov edx, OFFSET prompt2
+    call WriteString
+    call ReadInt
+
+    ; 합산 및 출력
+    add eax, ebx
+    mov dh, 12
+    mov dl, 20
+    call Gotoxy
+    mov edx, OFFSET sumMsg
+    call WriteString
+    call WriteInt
+    call Crlf
+
+    exit
+main ENDP
+END main
+
+4. Simple Addition (2)
+Use the solution program from the preceding exercise as a starting point. Let this new program
+repeat the same steps three times, using a loop. Clear the screen after each loop iteration.
+
+INCLUDE Irvine32.inc
+
+.data
+prompt1 BYTE "Enter first integer: ", 0
+prompt2 BYTE "Enter second integer: ", 0
+sumMsg  BYTE "The sum is: ", 0
+
+.code
+main PROC
+    mov ecx, 3    ; 3회 반복
+
+L1:
+    push ecx
+    call DoAddition
+    mov eax, 1500 ; 결과 확인을 위한 1.5초 대기
+    call Delay
+    call Clrscr
+    pop ecx
+    loop L1
+
+    exit
+main ENDP
+
+DoAddition PROC
+    mov dh, 10
+    mov dl, 20
+    call Gotoxy
+    mov edx, OFFSET prompt1
+    call WriteString
+    call ReadInt
+    mov ebx, eax
+
+    mov dh, 11
+    mov dl, 20
+    call Gotoxy
+    mov edx, OFFSET prompt2
+    call WriteString
+    call ReadInt
+
+    add eax, ebx
+    mov dh, 12
+    mov dl, 20
+    call Gotoxy
+    mov edx, OFFSET sumMsg
+    call WriteString
+    call WriteInt
+    call Crlf
+    ret
+DoAddition ENDP
+END main
+
+5. BetterRandomRange Procedure
+The RandomRange procedure from the Irvine32 library generates a pseudorandom integer between
+0 and N - 1. Your task is to create an improved version that generates an integer between M and
+N 1. Let the caller pass M in EBX and N in EAX. If we call the procedure BetterRandomRange, the
+following code is a sample test:
+mov  ebx,-300	; lower bound
+mov  eax,100	; upper bound
+call BetterRandomRange
+Write a short test program that calls BetterRandomRange from a loop that repeats 50 times.
+Display each randomly generated value.
+
+INCLUDE Irvine32.inc
+
+.code
+main PROC
+    call Randomize
+    mov ecx, 50
+
+L1:
+    mov ebx, -300    ; M (최소)
+    mov eax, 100     ; N (최대)
+    call BetterRandomRange
+    call WriteInt
+    mov al, ' '
+    call WriteChar
+    loop L1
+
+    call Crlf
+    exit
+main ENDP
+
+;---------------------------------------------------
+; BetterRandomRange
+; [M, N-1] 범위의 난수를 생성합니다.
+; 입력: EBX = M (하한), EAX = N (상한)
+; 출력: EAX = 난수
+;---------------------------------------------------
+BetterRandomRange PROC
+    push ebx
+    sub eax, ebx     ; 범위 크기: N - M
+    call RandomRange ; 0 ~ (N - M - 1)
+    add eax, ebx     ; M ~ (N - 1)
+    pop ebx
+    ret
+BetterRandomRange ENDP
+END main
+
+6. Random Strings
+Create a procedure that generates a random string of length L, containing all capital letters.
+When calling the procedure, pass the value of L in EAX, and pass a pointer to an array of byte
+that will hold the random string. Write a test program that calls your procedure 20 times and dis
+plays the strings in the console window. 
+
+INCLUDE Irvine32.inc
+
+L_LEN = 10
+
+.data
+strBuffer BYTE L_LEN DUP(?), 0
+
+.code
+main PROC
+    call Randomize
+    mov ecx, 20
+
+L1:
+    push ecx
+    mov eax, L_LEN
+    mov edx, OFFSET strBuffer
+    call CreateRandomString
+    
+    mov edx, OFFSET strBuffer
+    call WriteString
+    call Crlf
+    pop ecx
+    loop L1
+
+    exit
+main ENDP
+
+;---------------------------------------------------
+; CreateRandomString
+; 대문자로 구성된 무작위 문자열을 생성합니다.
+; 입력: EAX = 길이 L, EDX = 버퍼 포인터
+;---------------------------------------------------
+CreateRandomString PROC
+    push ecx
+    push esi
+    push eax
+
+    mov ecx, eax
+    mov esi, edx
+
+L1:
+    mov eax, 26
+    call RandomRange ; 0 ~ 25
+    add al, 'A'
+    mov [esi], al
+    inc esi
+    loop L1
+
+    mov BYTE PTR [esi], 0 ; 문자열 끝 널(NULL) 처리
+    pop eax
+    pop esi
+    pop ecx
+    ret
+CreateRandomString ENDP
+END main
+
+7. Random Screen Locations
+Write a program that displays a single character at 100 random screen locations, using a timing
+delay of 100 milliseconds. Hint: Use the GetMaxXY procedure to determine the current size of
+the console window.
+
+INCLUDE Irvine32.inc
+
+.data
+charVal BYTE 'A'
+rows    BYTE ?
+cols    BYTE ?
+
+.code
+main PROC
+    call Randomize
+    call Clrscr
+    call GetMaxXY ; DH = 최대 행(Y), DL = 최대 열(X)
+    mov rows, dh
+    mov cols, dl
+
+    mov ecx, 100
+
+L1:
+    movzx eax, cols
+    call RandomRange
+    mov dl, al      ; 무작위 X 위치
+
+    movzx eax, rows
+    call RandomRange
+    mov dh, al      ; 무작위 Y 위치
+
+    call Gotoxy
+    mov al, charVal
+    call WriteChar
+
+    mov eax, 100    ; 100ms 대기
+    call Delay
+    loop L1
+
+    exit
+main ENDP
+END main
+
+8. Color Matrix
+Write a program that displays a single character in all possible combinations of foreground and
+background colors (16 x 16  = 256). The colors are numbered from 0 to 15, so you can use a
+nested loop to generate all possible combinations.
+
+INCLUDE Irvine32.inc
+
+.data
+charVal BYTE 'A'
+
+.code
+main PROC
+    mov ecx, 16     ; 배경색 (0 ~ 15)
+    mov ebx, 0      ; ebx: 배경색 카운터
+
+L_Back:
+    push ecx
+    mov ecx, 16     ; 글자색 (0 ~ 15)
+    mov edx, 0      ; edx: 글자색 카운터
+
+L_Fore:
+    ; 색상 값 계산: (배경색 * 16) + 글자색
+    mov eax, ebx
+    shl eax, 4      ; ebx * 16
+    add eax, edx
+    call SetTextColor
+
+    mov al, charVal
+    call WriteChar
+
+    inc edx
+    loop L_Fore
+
+    call Crlf
+    inc ebx
+    pop ecx
+    loop L_Back
+
+    ; 기본 색상으로 복원
+    mov eax, white + (black * 16)
+    call SetTextColor
+    exit
+main ENDP
+END main
+
+9. Recursive Procedure
+Direct recursion is the term we use when a procedure calls itself. Of course, you never want to
+let a procedure keep calling itself forever, because the runtime stack would fill up. Instead, you
+must limit the recursion in some way. Write a program that calls a recursive procedure. Inside
+this procedure, add 1 to a counter so you can verify the number of times it executes. Run your
+program with a debugger, and at the end of the program, check the counter’s value. Put a num
+ber in ECX that specifies the number of times you want to allow the recursion to continue. Using
+only the LOOP instruction (and no other conditional statements from later chapters), find a way
+for the recursive procedure to call itself a fixed number of times.
+
+INCLUDE Irvine32.inc
+
+.data
+count DWORD 0
+
+.code
+main PROC
+    mov ecx, 10            ; 재귀 호출 횟수 설정 (10회)
+    call RecursiveProc
+
+    mov eax, count         ; 디버거 또는 출력으로 count 확인 (결과: 10)
+    call WriteDec
+    call Crlf
+    exit
+main ENDP
+
+;---------------------------------------------------
+; RecursiveProc
+; LOOP 명령어만을 활용하여 ECX만큼 재귀 호출을 수행합니다.
+;---------------------------------------------------
+RecursiveProc PROC
+    inc count
+    loop L1
+    jmp L2                 ; ECX가 0에 도달하면 재귀 종료
+
+L1:
+    call RecursiveProc     ; 자기 자신을 호출
+
+L2:
+    ret
+RecursiveProc ENDP
+END main
+
+10. Fibonacci Generator
+Write a procedure that produces N values in the Fibonacci number series and stores them in an
+array of doubleword. Input parameters should be a pointer to an array of doubleword, a
+counter of the number of values to generate. Write a test program that calls your procedure,
+passing N = 47. The first value in the array will be 1, and the last value will be 2,971,215,073.
+Use the Visual Studio debugger to open and inspect the array contents.
+
+INCLUDE Irvine32.inc
+
+FIB_COUNT = 47
+
+.data
+fibArray DWORD FIB_COUNT DUP(?)
+
+.code
+main PROC
+    mov esi, OFFSET fibArray
+    mov ecx, FIB_COUNT
+    call GenerateFibonacci
+
+    ; 마지막 값(47번째) 출력하여 검증: 2,971,215,073
+    mov eax, fibArray[(FIB_COUNT - 1) * 4]
+    call WriteDec
+    call Crlf
+
+    exit
+main ENDP
+
+;---------------------------------------------------
+; GenerateFibonacci
+; 피보나치 수열 N개를 생성하여 배열에 저장합니다.
+; 입력: ESI = DWORD 배열 포인터, ECX = N (생성할 개수)
+;---------------------------------------------------
+GenerateFibonacci PROC
+    pushad
+
+    mov DWORD PTR [esi], 1        ; F(1) = 1
+    cmp ecx, 1
+    je Quit
+
+    mov DWORD PTR [esi + 4], 1    ; F(2) = 1
+    cmp ecx, 2
+    je Quit
+
+    sub ecx, 2                    ; 앞 2개는 이미 채움
+    add esi, 8
+
+L1:
+    mov eax, [esi - 4]
+    add eax, [esi - 8]
+    mov [esi], eax
+    add esi, 4
+    loop L1
+
+Quit:
+    popad
+    ret
+GenerateFibonacci ENDP
+END main
+
+11. Finding Multiples of K
+In a byte array of size N, write a procedure that finds all multiples of K that are less than N. Ini
+tialize the array to all zeros at the beginning of the program, and then whenever a multiple is
+found, set the corresponding array element to 1. Your procedure must save and restore any regis
+ters it modifies. Call your procedure twice, with K = 2, and again with K = 3. Let N equal to 50.
+Run your program in the debugger and verify that the array values were set correctly. Note: This
+procedure can be a useful tool when finding prime integers. An efficient algorithm for finding
+prime numbers is known as the Sieve of Eratosthenes. You will be able to implement this algo
+rithm when conditional statements are covered in Chapter 6.
+
+INCLUDE Irvine32.inc
+
+N_SIZE = 50
+
+.data
+byteArray BYTE N_SIZE DUP(0)
+
+.code
+main PROC
+    ; K = 2 인 경우
+    mov esi, OFFSET byteArray
+    mov ecx, N_SIZE
+    mov ebx, 2
+    call FindMultiples
+
+    ; K = 3 인 경우
+    mov esi, OFFSET byteArray
+    mov ecx, N_SIZE
+    mov ebx, 3
+    call FindMultiples
+
+    exit
+main ENDP
+
+;---------------------------------------------------
+; FindMultiples
+; 배열 내에서 K의 배수 인덱스 위치에 1을 설정합니다.
+; 입력: ESI = 배열 포인터, ECX = N 크기, EBX = K 값
+;---------------------------------------------------
+FindMultiples PROC
+    pushad
+
+    mov edi, 0    ; 인덱스
+
+L1:
+    mov eax, edi
+    mov edx, 0
+    div ebx       ; EAX = 인덱스 / K, EDX = 인덱스 % K
+
+    cmp edx, 0
+    jne Next
+    mov BYTE PTR [esi + edi], 1 ; 나머지가 0이면 배수이므로 1로 설정
+
+Next:
+    inc edi
+    loop L1
+
+    popad
+    ret
+FindMultiples ENDP
+END main
+
