@@ -42,3 +42,4 @@ value. If AL already contains a binary value (00h to 09h), leave it unchanged
 -> and al, 0Fh
 문자 '5' = 35h (2진수: 0011 0101)
 진짜 숫자 5 = 05h (2진수: 0000 0101)
+진도를 6장까지 나간줄 알고 6장을 풀어서 github에 올렸는데 5장을 올렸어야 했는데 잘못 올림. 그래서 5장으로
