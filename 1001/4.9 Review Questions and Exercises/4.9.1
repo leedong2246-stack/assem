@@ -13,31 +13,31 @@ movsx edx,two		; (b) EDX = 00004321h (0이 아니기 때문에 0으로 다 채�
 
 mov  eax,1002FFFFh
 inc  	ax 
--> EAX = 10020000h (inc가 1을 증가시키는 코드인데 ax라서 16비트에만 영향을 준다)
+-> EAX = 10020000h (inc가 1을 증가 시키는데 ax라서 16비트에만 영향을 준다)
 
 3. What will be the value in EAX after the following lines execute?
 
 mov  eax,30020000h
 dec 	ax
--> EAX = 3002FFFFh
+-> EAX = 3002FFFFh (dec 1을 감소 시키는데 하위 ax라서 16비트에만 영향을 준다)
 
 4. What will be the value in EAX after the following lines execute?
 
 mov  eax,1002FFFFh
 neg 	ax
--> EAX = 10020001h
+-> EAX = 10020001h (neg 2의 보수를 취하는데 ax라서 16비트에만 영향을 준다)
 
 5. What will be the value of the Parity flag after the following lines execute?
 
 mov  al,1
 add  	al,3
--> Parity Flag (PF) = 0
+-> Parity Flag (PF) = 0 (패리티 플래그는 2진수에서 1의 개수가 짝수개면 1)
 
 6. What will be the value of EAX and the Sign flag after the following lines execute? 
 
 mov  eax,5
 sub  	eax,6
--> EAX = FFFFFFFFh
+-> EAX = FFFFFFFFh (값이 음수라서 SF값은 1이 된다)
 
 7. In the following code, the value in AL is intended to be a signed byte. Explain how the
 Overflow flag helps, or does not help you, to determine whether the final value in AL falls
@@ -49,7 +49,7 @@ add  al,130
 
 8. What value will RAX contain after the following instruction executes?
 
-mov  rax,44445555h
+mov  rax,44445555h (16진수라서 0000 4개의 비트가 필요하다 32비트인데 rax는 64비트라서 상위 값들은 0으로 채워진다)
 -> RAX = 0000000044445555h
 
 9. What value will RAX contain after the following instructions execute?
@@ -59,17 +59,17 @@ dwordVal DWORD 84326732h
 .code
 mov  rax,0FFFFFFFF00000000h
 mov  rax,dwordVal
--> RAX = 0000000084326732h
+-> RAX = 0000000084326732h (mov하면 0으로 초기화)
 
 10. What value will EAX contain after the following instructions execute?
 
 .data
-dVal DWORD 12345678h
+dVal DWORD 12345678h (dVal은 메모리에 [78] [56] [34] [12])
 .code
-mov  ax,3
-mov  WORD PTR dVal+2,ax
+mov  ax,3 
+mov  WORD PTR dVal+2,ax (PTR dVal+2는 상위 2바이트 위치인 [34] [12] 부분을 가리킵니다.)
 mov  eax,dVal
--> EAX = 00035678h
+-> EAX = 00035678h 
 	
 11. What will EAX contain after the following instructions execute?
 
@@ -81,7 +81,7 @@ mov  ax,WORD PTR dVal+2
 add  ax,3
 mov  WORD PTR dVal,ax
 mov  eax,dVal
--> EAX = 12341237h
+-> EAX = 12341237h (1237을 가져오고 dVal에서 가져오니까 상위는 1234가 된다)
 
 12. (Yes/No): Is it possible to set the Overflow flag if you add a positive integer to a negative
 integer?
@@ -113,13 +113,13 @@ d. mov   var2,var3 -> Invalid
 e. movzx ax,var2 -> Invalid
 f.  movzx var2,al -> Invalid
 g.   mov   ds,ax -> Valid
-h.   mov   ds,1000h -> Invalid
+h.   mov   ds,1000h -> Invalid   (b, g 만 가능)
 
 
 17. What will be the hexadecimal value of the destination operand after each of the following
 instructions execute in sequence?
 
-mov  al,var1		; a. -> AL = FCh (var1의 첫 번째 바이트 -4)
+mov  al,var1		; a. -> AL = FCh (var1의 첫 번째 바이트 -4) 어셈블리에서는 var1하면 제일 앞에 값을 줌
 mov  ah,[var1+3]		; b. -> AH = 01h (var1의 4번째 바이트 1)
 
 
