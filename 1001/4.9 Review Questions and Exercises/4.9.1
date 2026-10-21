@@ -1,140 +1,168 @@
-
-1. What will be the value in EDX after each of the lines marked (a) and (b) execute?
-
+1번
+[문제] (a)와 (b)로 표시된 명령어가 실행된 후 EDX 레지스터의 값은 각각 무엇인가?
 .data
 one WORD 8002h
 two WORD 4321h
 .code
-mov   edx,21348041h
-movsx edx,one		; (a) EDX = FFFF8002h (불러 오는 값의 맨 앞 비트가 1이면 1로 다채운다) 8002
-movsx edx,two		; (b) EDX = 00004321h (0이 아니기 때문에 0으로 다 채운다)
+mov   edx, 21348041h
+movsx edx, one      ; (a)
+movsx edx, two      ; (b)
+[정답]
+(a) EDX = FFFF8002h
+(b) EDX = 00004321h
+[해설] MOVSX는 부호 확장(Sign-Extend) 이동 명령어입니다.
+(a) `one`의 최상위 비트(MSB)가 1(8 = 1000b)이므로 상위 16비트를 1(FFFFh)로 채웁니다.
+(b) `two`의 최상위 비트(MSB)가 0(4 = 0100b)이므로 상위 16비트를 0(0000h)으로 채웁니다.
 
-2. What will be the value in EAX after the following lines execute?
+2번
+[문제] 다음 명령어들이 실행된 후 EAX 레지스터의 값은 무엇인가?
+mov  eax, 1002FFFFh
+inc  ax
+[정답] EAX = 10020000h
+[해설] `inc ax`는 하위 16비트 레지스터인 AX의 값만 1 증가시킵니다. FFFFh에 1을 더하면 0000h가 되며(자릿수 넘침 발생), 상위 16비트인 1002h는 변경되지 않고 유지됩니다.
 
-mov  eax,1002FFFFh
-inc  	ax 
--> EAX = 10020000h (inc가 1을 증가 시키는데 ax라서 16비트에만 영향을 준다)
+3번
+[문제] 다음 명령어들이 실행된 후 EAX 레지스터의 값은 무엇인가?
+mov  eax, 30020000h
+dec  ax
+[정답] EAX = 3002FFFFh
+[해설] `dec ax`는 하위 16비트 레지스터인 AX의 값만 1 감소시킵니다. 0000h에서 1을 빼면 FFFFh가 되며, 상위 16비트인 3002h는 변경되지 않고 유지됩니다.
 
-3. What will be the value in EAX after the following lines execute?
+4번
+[문제] 다음 명령어들이 실행된 후 EAX 레지스터의 값은 무엇인가?
+mov  eax, 1002FFFFh
+neg  ax
+[정답] EAX = 10020001h
+[해설] `neg ax`는 AX 레지스터(FFFFh = -1)의 2의 보수(+1 = 0001h)를 취합니다. EAX의 상위 16비트(1002h)는 영향을 받지 않습니다.
 
-mov  eax,30020000h
-dec 	ax
--> EAX = 3002FFFFh (dec 1을 감소 시키는데 하위 ax라서 16비트에만 영향을 준다)
+5번
+[문제] 다음 명령어들이 실행된 후 패리티 플래그(Parity Flag, PF)의 값은 무엇인가?
+mov  al, 1
+add  al, 3
+[정답] Parity Flag (PF) = 0
+[해설] AL = 1 + 3 = 4 이며, 2진수로 `00000100b`입니다. 하위 8비트에서 '1' 비트의 개수가 1개(홀수 개)이므로 패리티 플래그(PF)는 0이 됩니다. (1의 개수가 짝수일 때 PF=1)
 
-4. What will be the value in EAX after the following lines execute?
+6번
+[문제] 다음 명령어들이 실행된 후 EAX 레지스터의 값과 부호 플래그(Sign Flag, SF)의 값은 무엇인가?
+mov  eax, 5
+sub  eax, 6
+[정답] EAX = FFFFFFFFh, Sign Flag (SF) = 1
+[해설] 5 - 6 = -1 이며, 32비트 16진수로 표현하면 `FFFFFFFFh`입니다. 연산 결과가 음수(최상위 비트가 1)이므로 부호 플래그(SF)가 1로 설정됩니다.
 
-mov  eax,1002FFFFh
-neg 	ax
--> EAX = 10020001h (neg 2의 보수를 취하는데 ax라서 16비트에만 영향을 준다)
+7번
+[문제] 다음 코드에서 AL의 값은 부호 있는 바이트로 간주됩니다. 오버플로 플래그(Overflow Flag, OF)가 연산 결과의 유효성 판단에 어떻게 기여하는지 설명하시오.
+mov  al, -1
+add  al, 130
+[정답] Overflow flag (OF) = 0 이며, 연산 결과가 8비트 부호 있는 정수 범위(-128 ~ +127) 내에 있음을 나타냅니다.
+[해설] AL = -1(FFh)에 130(82h = 부호 있는 정수로 -126)을 더하면, -1 + (-126) = -127 (81h)이 됩니다. -127은 8비트 부호 있는 정수 범위(-128 ~ +127)에 올바르게 포함되므로 부호 오버플로가 발생하지 않아 OF = 0이 됩니다.
 
-5. What will be the value of the Parity flag after the following lines execute?
+8번
+[문제] 다음 명령어가 실행된 후 RAX 레지스터의 값은 무엇인가?
+mov  rax, 44445555h
+[정답] RAX = 0000000044445555h
+[해설] x86-64 모드에서 32비트 상수를 64비트 레지스터에 mov하면 상위 32비트는 자동으로 0으로 채워집니다(Zero-extension).
 
-mov  al,1
-add  	al,3
--> Parity Flag (PF) = 0 (패리티 플래그는 2진수에서 1의 개수가 짝수개면 1)
-
-6. What will be the value of EAX and the Sign flag after the following lines execute? 
-
-mov  eax,5
-sub  	eax,6
--> EAX = FFFFFFFFh (값이 음수라서 SF값은 1이 된다)
-
-7. In the following code, the value in AL is intended to be a signed byte. Explain how the
-Overflow flag helps, or does not help you, to determine whether the final value in AL falls
-within a valid signed range.
-
-mov al,-1
-add  al,130
--> Overflow flag(OF)는 0이 되며, 이는 결과가 올바른 부호 범위 내에 있음을 나타냅니다.
-
-8. What value will RAX contain after the following instruction executes?
-
-mov  rax,44445555h (16진수라서 0000 4개의 비트가 필요하다 32비트인데 rax는 64비트라서 상위 값들은 0으로 채워진다)
--> RAX = 0000000044445555h
-
-9. What value will RAX contain after the following instructions execute?
-
+9번
+[문제] 다음 명령어들이 실행된 후 RAX 레지스터의 값은 무엇인가?
 .data	
 dwordVal DWORD 84326732h
 .code
-mov  rax,0FFFFFFFF00000000h
-mov  rax,dwordVal
--> RAX = 0000000084326732h (mov하면 0으로 초기화)
+mov  rax, 0FFFFFFFF00000000h
+mov  rax, dwordVal
+[정답] RAX = 0000000084326732h
+[해설] 32비트 메모리 피연산자(`dwordVal`)를 64비트 레지스터 RAX로 이동시키면 상위 32비트 영역이 0으로 초기화됩니다.
 
-10. What value will EAX contain after the following instructions execute?
-
+10번
+[문제] 다음 명령어들이 실행된 후 EAX 레지스터의 값은 무엇인가?
 .data
-dVal DWORD 12345678h (dVal은 메모리에 [78] [56] [34] [12])
+dVal DWORD 12345678h
 .code
-mov  ax,3 
-mov  WORD PTR dVal+2,ax (PTR dVal+2는 상위 2바이트 위치인 [34] [12] 부분을 가리킵니다.)
-mov  eax,dVal
--> EAX = 00035678h 
-	
-11. What will EAX contain after the following instructions execute?
+mov  ax, 3 
+mov  WORD PTR dVal+2, ax
+mov  eax, dVal
+[정답] EAX = 00035678h
+[해설] `dVal`의 초기 메모리 구조(리틀 엔디안)는 `[78][56][34][12]`입니다. `dVal+2` 위치인 상위 WORD `[34][12]`를 `0003h`로 덮어쓰면 `[78][56][03][00]`이 되므로, DWORD로 읽었을 때 `00035678h`가 됩니다.
 
+11번
+[문제] 다음 명령어들이 실행된 후 EAX 레지스터의 값은 무엇인가?
 .data
-.dVal DWORD ?
+dVal DWORD ?
 .code
-mov  dVal,12345678h
-mov  ax,WORD PTR dVal+2
-add  ax,3
-mov  WORD PTR dVal,ax
-mov  eax,dVal
--> EAX = 12341237h (1237을 가져오고 dVal에서 가져오니까 상위는 1234가 된다)
+mov  dVal, 12345678h
+mov  ax, WORD PTR dVal+2
+add  ax, 3
+mov  WORD PTR dVal, ax
+mov  eax, dVal
+[정답] EAX = 12341237h
+[해설] `dVal`의 상위 WORD는 1234h입니다. AX에 1234h를 가져와 3을 더하면 1237h가 되며, 이 값을 `dVal`의 하위 WORD 위치에 덮어씁니다. 따라서 상위 1234h와 하위 1237h가 결합되어 `12341237h`가 됩니다.
 
-12. (Yes/No): Is it possible to set the Overflow flag if you add a positive integer to a negative
-integer?
--> No
+12번
+[문제] (예/아니오) 양수 정수와 음수 정수를 더할 때 오버플로 플래그(OF)가 1로 설정될 수 있는가?
+[정답] No (아니오)
+[해설] 서로 다른 부호의 정수를 더할 때는 결과값이 절대로 표현 범위를 초과할 수 없으므로 오버플로가 발생하지 않습니다.
 
-13. (Yes/No): Will the Overflow flag be set if you add a negative integer to a negative integer
-and produce a positive result?
--> Yes
+13번
+[문제] (예/아니오) 음수 정수와 음수 정수를 더하여 양수 결과가 나왔을 때 오버플로 플래그(OF)가 1로 설정되는가?
+[정답] Yes (예)
+[해설] 같은 부호(음수+음수)의 연산 결과가 표현 범위를 밑돌아 부호 비트가 0(양수)으로 뒤집힌 것이므로 부호 오버플로(OF=1)가 발생합니다.
 
-14. (Yes/No): Is it possible for the NEG instruction to set the Overflow flag?
--> Yes
+14번
+[문제] (예/아니오) NEG 명령어 실행으로 오버플로 플래그(OF)가 1로 설정되는 것이 가능한가?
+[정답] Yes (예)
+[해설] 각 크기별 부호 있는 정수의 최솟값(예: 8비트 -128, 16비트 -32768, 32비트 -2147483648)을 NEG 연산하면 대응하는 양수 값이 존재하지 않으므로 OF=1이 됩니다.
 
-15. (Yes/No): Is it possible for both the Sign and Zero flags to be set at the same time?
-Use the following variable definitions for Questions 16–19:
+15번
+[문제] (예/아니오) 부호 플래그(SF)와 제로 플래그(ZF)가 동시에 1로 설정되는 것이 가능한가?
+[정답] No (아니오)
+[해설] 결과가 0이면 ZF=1이지만 0의 최상위 비트는 0이므로 SF=0입니다. 결과가 음수이면 SF=1이지만 0이 아니므로 ZF=0입니다. 두 플래그는 동시에 1이 될 수 없습니다.
 
+[16~19번 공통 변수 선언]
 .data
-var1 SBYTE -4,-2,3,1
-var2 WORD 1000h,2000h,3000h,4000h
-var3 SWORD -16,-42
-var4 DWORD 1,2,3,4,5
--> No
+var1 SBYTE -4, -2, 3, 1
+var2 WORD 1000h, 2000h, 3000h, 4000h
+var3 SWORD -16, -42
+var4 DWORD 1, 2, 3, 4, 5
 
-16. For each of the following statements, state whether or not the instruction is valid:
+16번
+[문제] 다음 각 명령어의 유효성(Valid / Invalid) 여부를 판별하시오.
+a. mov ax, var1    -> Invalid (16비트 AX와 8비트 var1의 피연산자 크기 불일치)
+b. mov ax, var2    -> Valid   (16비트 AX와 16비트 var2 크기 일치)
+c. mov eax, var3   -> Invalid (32비트 EAX와 16비트 var3의 피연산자 크기 불일치)
+d. mov var2, var3  -> Invalid (메모리 간 직접 데이터 이동 불가)
+e. movzx ax, var2  -> Invalid (MOVZX는 목적지가 원본보다 크기가 커야 함)
+f. movzx var2, al  -> Invalid (MOVZX의 목적지는 레지스터여야 함)
+g. mov ds, ax      -> Valid   (레지스터의 값을 세그먼트 레지스터로 이동 가능)
+h. mov ds, 1000h   -> Invalid (상수를 세그먼트 레지스터에 직접 이동 불가)
+[정답] Valid한 명령어: b, g / Invalid한 명령어: a, c, d, e, f, h
 
-a.  mov   ax,var1? -> Invalid
-b.  mov   ax,var2 -> Valid
-c. mov   eax,var3 -> Invalid
-d. mov   var2,var3 -> Invalid
-e. movzx ax,var2 -> Invalid
-f.  movzx var2,al -> Invalid
-g.   mov   ds,ax -> Valid
-h.   mov   ds,1000h -> Invalid   (b, g 만 가능)
+17번
+[문제] 다음 명령어들이 순차적으로 실행될 때 목적지 피연산자의 16진수 값은 무엇인가?
+mov  al, var1       ; a.
+mov  ah, [var1+3]   ; b.
+[정답]
+a. AL = FCh (var1의 첫 번째 바이트 값 -4를 8비트 16진수로 표현)
+b. AH = 01h (var1의 4번째 바이트 위치 [var1+3]의 값 1)
 
+18번
+[문제] 다음 명령어들이 순차적으로 실행될 때 목적지 피연산자의 값은 무엇인가?
+mov  ax, var2       ; a.
+mov  ax, [var2+4]   ; b.
+mov  ax, var3       ; c.
+mov  ax, [var3-2]   ; d.
+[정답]
+a. AX = 1000h (var2[0] 값)
+b. AX = 3000h (WORD=2바이트이므로 +4 위치는 3번째 요소 var2[2] 값)
+c. AX = FFF0h (var3[0] 값 -16을 16비트 16진수로 표현)
+d. AX = 4000h (var3 시작 위치에서 2바이트 앞의 메모리 위치 = var2의 마지막 요소 값)
 
-17. What will be the hexadecimal value of the destination operand after each of the following
-instructions execute in sequence?
-
-mov  al,var1		; a. -> AL = FCh (var1의 첫 번째 바이트 -4) 어셈블리에서는 var1하면 제일 앞에 값을 줌
-mov  ah,[var1+3]		; b. -> AH = 01h (var1의 4번째 바이트 1)
-
-
-18. What will be the value of the destination operand after each of the following instructions
-execute in sequence?
-
-mov  ax,var2		; a. -> AX = 1000h (var2[0])
-mov  ax,[var2+4]		; b. ->  AX = 3000h (var2+4 바이트 위치 = 3번째 WORD)
-mov  ax,var3		; c. -> AX = FFF0h (var3[0] 값인 -16을 16진수로 표현)
-mov  ax,[var3-2]		; d. -> AX = 4000h (var3 바로 전 2바이트 메모리 위치 = var2의 마지막 값)
-
-19. What will be the value of the destination operand after each of the following instructions
-execute in sequence?
-
-mov    edx,var4		; a. -> EDX = 00000001h (var4[0])
-movzx  edx,var2		; b. -> EDX = 00001000h (var2[0]을 MOVZX로 32비트 zero-extension)
-mov    edx,[var4+4]	; c. -> EDX = 00000002h (var4+4 바이트 위치 = 2번째 DWORD)
-movsx  edx,var1		; d. -> EDX = FFFFFFFCh (var1[0] 값인 -4 / FCh를 MOVSX로 32비트 sign-extension)답을 지우고 해석해줘
+19번
+[문제] 다음 명령어들이 순차적으로 실행될 때 목적지 피연산자의 값은 무엇인가?
+mov    edx, var4     ; a.
+movzx  edx, var2     ; b.
+mov    edx, [var4+4] ; c.
+movsx  edx, var1     ; d.
+[정답]
+a. EDX = 00000001h (var4[0] 값)
+b. EDX = 00001000h (var2[0] 값 1000h를 32비트로 Zero-extension)
+c. EDX = 00000002h (DWORD=4바이트이므로 +4 위치는 2번째 요소 var4[1] 값)
+d. EDX = FFFFFFFCh (var1[0] 값 -4 / FCh를 32비트로 Sign-extension)
