@@ -1,1 +1,156 @@
 
+1번
+[문제] AL 레지스터에 있는 ASCII 숫자('0'~'9')를 대응하는 2진수 값(00h~09h)으로 변환하는 단 하나의 명령어를 작성하시오. (만약 AL에 이미 2진수 값 00h~09h가 들어있다면 변경되지 않아야 함)
+[정답]
+and al, 0Fh
+[해설] ASCII 숫자 문자 '0'~'9'는 16진수로 30h~39h입니다. `AND AL, 0Fh` 연산을 수행하면 상위 4비트(3h)가 0으로 지워져 00h~09h 값으로 변환됩니다. AL에 이미 00h~09h가 들어있더라도 상위 비트가 0이므로 값이 유지됩니다.
+
+2번
+[문제] 32비트 메모리 피연산자의 패리티(Parity)를 계산하는 명령어를 작성하시오. (힌트: B0 XOR B1 XOR B2 XOR B3 공식 사용)
+[정답]
+mov al, BYTE PTR [memVal]
+xor al, BYTE PTR [memVal + 1]   
+xor al, BYTE PTR [memVal + 2]   
+xor al, BYTE PTR [memVal + 3]   
+[해설] 32비트(4바이트) 메모리의 각 바이트를 AL 레지스터에 순차적으로 XOR 연산하면, 4개 바이트 전체 비트의 패리티 상태가 AL에 집계되고 패리티 플래그(PF)가 이에 맞게 설정됩니다.
+
+3번
+[문제] 비트맵 집합 SetX와 SetY가 주어졌을 때, SetX의 원소이면서 SetY의 원소는 아닌(SetX - SetY) 비트열을 EAX에 생성하는 명령어 시퀀스를 작성하시오.
+[정답]
+mov eax, SetY
+not eax
+and eax, SetX
+[해설] 차집합 연산은 `SetX AND (NOT SetY)` 공식으로 구현됩니다. SetY를 NOT 연산하여 비트를 반전시킨 후 SetX와 AND 연산을 수행하면 SetX에만 존재하는 비트만 남게 됩니다.
+
+4번
+[문제] DX의 부호 없는 정수가 CX의 정수보다 작거나 같을 때(DX <= CX) L1 라벨로 점프하는 명령어를 작성하시오.
+[정답]
+cmp dx, cx
+jbe L1
+[해설] `CMP` 명령어 이후 `JBE`(Jump if Below or Equal)는 부호 없는 정수 비교에서 '작거나 같음' 조건일 때 분기합니다.
+
+5번
+[문제] AX의 부호 있는 정수가 CX의 정수보다 클 때(AX > CX) L2 라벨로 점프하는 명령어를 작성하시오.
+[정답]
+cmp ax, cx
+jg L2
+[해설] `CMP` 명령어 이후 `JG`(Jump if Greater)는 부호 있는 정수 비교에서 '큼' 조건일 때 분기합니다.
+
+6번
+[문제] 먼저 AL의 0번과 1번 비트를 0으로 지우는 코드를 작성하시오. 그 후 결과 값이 0이면 L3 라벨로 점프하고, 0이 아니면 L4 라벨로 점프하는 코드를 작성하시오.
+[정답]
+and al, 11111100b
+jz  L3
+jmp L4
+[해설] `AND AL, 11111100b`(또는 0FCh)를 수행하면 하위 2비트(bit 0, 1)만 0으로 지워집니다. AND 연산 결과가 0이면 Zero Flag(ZF)가 1이 되므로 `JZ L3`에 의해 L3로 점프하고, 그렇지 않으면 `JMP L4`로 이동합니다.
+
+7번
+[문제] 다음 의사코드를 숏서킷 평가(Short-Circuit Evaluation)를 사용하여 어셈블리로 구현하시오. (val1, X는 32비트 변수)
+if( val1 > ecx ) AND ( ecx > edx ) 
+   X = 1
+else
+   X = 2;
+[정답]
+    cmp val1, ecx
+    jle LOW
+    cmp ecx, edx
+    jle LOW
+
+    mov X, 1
+    jmp END
+
+LOW:
+    mov X, 2
+
+END:
+[해설] AND 조건문에서는 첫 번째 조건(`val1 > ecx`)이 거짓(jle)이면 두 번째 조건을 검사하지 않고 즉시 else 블록(`LOW`)으로 점프합니다. 두 조건이 모두 참일 때만 `X = 1`을 실행합니다.
+
+8번
+[문제] 다음 의사코드를 숏서킷 평가를 사용하여 어셈블리로 구현하시오. (X는 32비트 변수)
+if( ebx > ecx ) OR ( ebx > val1 ) 
+   X = 1
+else
+   X = 2
+[정답]
+    cmp ebx, ecx
+    jg L_THEN
+
+    cmp ebx, val1
+    jg L_THEN
+
+    mov X, 2
+    jmp L_END
+
+L_THEN:
+    mov X, 1
+
+L_END:
+[해설] OR 조건문에서는 첫 번째 조건(`ebx > ecx`)이 참(jg)이면 두 번째 조건을 검사하지 않고 즉시 then 블록(`L_THEN`)으로 점프합니다. 두 조건이 모두 거짓일 때만 else 블록(`X = 2`)이 실행됩니다.
+
+9번
+[문제] 다음 의사코드를 숏서킷 평가를 사용하여 어셈블리로 구현하시오. (X는 32비트 변수)
+if( ebx > ecx AND ebx > edx) OR ( edx > eax ) 
+   X = 1
+else
+   X = 2
+[정답]
+    cmp ebx, ecx
+    jle L_CHECK_OR
+
+    cmp ebx, edx
+    jg L_THEN
+
+L_CHECK_OR:
+    cmp edx, eax
+    jg L_THEN
+
+    mov X, 2
+    jmp L_END
+
+L_THEN:
+    mov X, 1
+
+L_END:
+[해설] 
+1. 왼쪽 AND 그룹 `(ebx > ecx AND ebx > edx)`을 검사합니다. `ebx <= ecx`이면 왼쪽 그룹 전체가 거짓이므로 OR의 오른쪽 조건(`L_CHECK_OR`)으로 이동합니다.
+2. `ebx > ecx`이고 `ebx > edx`이면 왼쪽 그룹이 참이므로 즉시 `L_THEN`으로 점프합니다.
+3. 왼쪽 그룹이 거짓일 경우 `edx > eax` 조건만 만족하면 `L_THEN`으로 점프하고, 모두 거짓이면 `X = 2`를 실행합니다.
+
+10번
+[문제] 다음 의사코드를 숏서킷 평가를 사용하여 어셈블리로 구현하시오. (A, B, N은 32비트 부호 있는 정수 변수)
+while N > 0
+  if N != 3 AND (N < A OR N > B)
+     N = N – 2
+  else
+     N = N – 1
+end while
+[정답]
+L_WHILE:
+    cmp N, 0
+    jle L_WHILE_END
+
+    cmp N, 3
+    je L_ELSE
+
+    cmp N, A
+    jl L_THEN
+
+    cmp N, B
+    jg L_THEN
+
+    jmp L_ELSE
+
+L_THEN:
+    sub N, 2
+    jmp L_WHILE
+
+L_ELSE:
+    sub N, 1
+    jmp L_WHILE
+
+L_WHILE_END:
+[해설]
+1. `while N > 0` 조건을 검사하여 N <= 0 이면 루프를 종료합니다.
+2. `if N != 3`: 만약 N == 3 이면 조건문 전체가 거짓이 되므로 즉시 `L_ELSE`로 이동하여 `N = N - 1`을 수행합니다.
+3. `(N < A OR N > B)`: N < A 이거나 N > B 중 하나라도 참이면 조건문 전체가 참이 되어 `L_THEN`으로 이동해 `N = N - 2`를 수행합니다.
+4. 모든 조건이 거짓인 경우 `L_ELSE`로 이동합니다.
