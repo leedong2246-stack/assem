@@ -1,1 +1,747 @@
 
+1번
+[문제] FillArray - 주어진 범위 [j...k] 내의 N개 난수로 32비트 정수 배열을 채우는 프로시저를 작성하시오. 호출 시 배열 포인터, N, j, k 값을 매개변수로 전달하고, 실행 전후 모든 레지스터 값을 보존하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+    array1 DWORD 10 DUP(?)
+    array2 DWORD 5 DUP(?)
+
+.code
+FillArray PROC
+    pushad
+    mov ecx, [esp + 44]
+    mov esi, [esp + 48]
+    mov eax, [esp + 36]
+    sub eax, [esp + 40]
+    inc eax
+    mov edx, eax
+
+L1:
+    mov eax, edx
+    call RandomRange
+    add eax, [esp + 40]
+    mov [esi], eax
+    add esi, 4
+    loop L1
+
+    popad
+    ret 16
+FillArray ENDP
+
+main PROC
+    call Randomize
+
+    push OFFSET array1
+    push 10
+    push 10
+    push 50
+    call FillArray
+
+    push OFFSET array2
+    push 5
+    push -10
+    push 10
+    call FillArray
+
+    exit
+main ENDP
+END main
+[해설] 스택을 통해 넘겨받은 범위 [j...k]의 크기 (k - j + 1)를 구한 뒤, `RandomRange`로 난수를 생성하고 시작값 j를 더해 범위 내 난수를 배열 요소로 저장합니다. `pushad`와 `popad`로 레지스터 상태를 보존합니다.
+
+2번
+[문제] SumRange - 부호 있는 32비트 정수 배열에서 지정한 범위 [j...k] 내에 속하는 요소들의 합을 구하여 EAX 레지스터로 반환하는 프로시저를 작성하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+    array SDWORD 10, -5, 20, 30, 15, -12, 0, 25, 40, 5
+    count DWORD LENGTHOF array
+
+.code
+SumRange PROC
+    push ebx
+    push ecx
+    push edx
+    push esi
+
+    mov esi, [esp + 20]
+    mov ecx, [esp + 24]
+    mov ebx, [esp + 28]
+    mov edx, [esp + 32]
+    xor eax, eax
+
+L1:
+    mov edi, [esi]
+    cmp edi, ebx
+    jl NEXT
+    cmp edi, edx
+    jg NEXT
+    add eax, edi
+
+NEXT:
+    add esi, 4
+    loop L1
+
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret 16
+SumRange ENDP
+
+main PROC
+    push edx
+    push ebx
+    push count
+    push OFFSET array
+
+    push 50
+    push 10
+    push count
+    push OFFSET array
+    call SumRange
+    call WriteInt
+    call Crlf
+
+    push 30
+    push 0
+    push count
+    push OFFSET array
+    call SumRange
+    call WriteInt
+    call Crlf
+
+    exit
+main ENDP
+END main
+[해설] 배열을 순회하면서 각각의 요소가 최소값 j 미만이거나(`jl NEXT`) 최대값 k 초과인(`jg NEXT`) 경우를 제외하고, 범위 조건 [j...k]을 만족하는 요소만 EAX에 누적 합산합니다.
+
+3번
+[문제] CalcGrade - 0~100 사이의 점수를 전달받아 해당 등급 문자('A'~'F')를 AL 레지스터로 반환하는 프로시저를 작성하시오. (90~100: A, 80~89: B, 70~79: C, 60~69: D, 0~59: F)
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+    msg BYTE "Score: ",0
+    msg2 BYTE "  Grade: ",0
+
+.code
+CalcGrade PROC
+    push ebx
+
+    cmp eax, 90
+    jge GRADE_A
+    cmp eax, 80
+    jge GRADE_B
+    cmp eax, 70
+    jge GRADE_C
+    cmp eax, 60
+    jge GRADE_D
+    mov al, 'F'
+    jmp L_END
+
+GRADE_A:
+    mov al, 'A'
+    jmp L_END
+GRADE_B:
+    mov al, 'B'
+    jmp L_END
+GRADE_C:
+    mov al, 'C'
+    jmp L_END
+GRADE_D:
+    mov al, 'D'
+
+L_END:
+    pop ebx
+    ret
+CalcGrade ENDP
+
+main PROC
+    call Randomize
+    mov ecx, 10
+
+L1:
+    mov eax, 51
+    call RandomRange
+    add eax, 50
+
+    mov edx, OFFSET msg
+    call WriteString
+    call WriteDec
+
+    push eax
+    call CalcGrade
+    mov bl, al
+
+    mov edx, OFFSET msg2
+    call WriteString
+    mov al, bl
+    call WriteChar
+    call Crlf
+
+    pop eax
+    loop L1
+
+    exit
+main ENDP
+END main
+[해설] 입력된 점수 EAX를 `cmp` 및 `jge` 명령어로 높은 점수 구간부터 차례대로 비교하여 해당하는 알파벳 성적 문자를 AL 레지스터에 대입합니다.
+
+4번
+[문제] College Registration - `.IF` 지시어 대신 `CMP` 및 조건부 점프 명령어를 사용하여 대학 수강 신청 조건 및 이수 학점 유효 범위(1~30)를 검사하는 프로그램을 작성하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+    prompt1 BYTE "Enter grade average (0-400): ",0
+    prompt2 BYTE "Enter credits (1-30): ",0
+    errCredit BYTE "Error: Credits must be between 1 and 30.",00ah,00dh,0
+    msgOk BYTE "The student can register.",00ah,00dh,0
+    msgNo BYTE "The student cannot register.",00ah,00dh,0
+    gradeAvg DWORD ?
+    credits DWORD ?
+
+.code
+main PROC
+    mov edx, OFFSET prompt1
+    call WriteString
+    call ReadInt
+    mov gradeAvg, eax
+
+    mov edx, OFFSET prompt2
+    call WriteString
+    call ReadInt
+    mov credits, eax
+
+    cmp credits, 1
+    jl ERR
+    cmp credits, 30
+    jg ERR
+
+    cmp gradeAvg, 350
+    jg CAN_REGISTER
+
+    cmp gradeAvg, 250
+    jle CHECK_LOW
+    cmp credits, 16
+    jle CAN_REGISTER
+    jmp CANNOT_REGISTER
+
+CHECK_LOW:
+    cmp gradeAvg, 200
+    jle CANNOT_REGISTER
+    cmp credits, 12
+    jle CAN_REGISTER
+    jmp CANNOT_REGISTER
+
+ERR:
+    mov edx, OFFSET errCredit
+    call WriteString
+    jmp L_END
+
+CAN_REGISTER:
+    mov edx, OFFSET msgOk
+    call WriteString
+    jmp L_END
+
+CANNOT_REGISTER:
+    mov edx, OFFSET msgNo
+    call WriteString
+
+L_END:
+    exit
+main ENDP
+END main
+[해설] 사용자로부터 학점과 평균 성적을 입력받은 후, 학점 수 범위(1~30)를 넘어서면 에러 메시지를 출력합니다. 이후 중첩 조건문을 분기 명령어(`cmp`, `jg`, `jle`)로 구현하여 수강 등록 가능 여부를 판단합니다.
+
+5번
+[문제] Boolean Calculator (1) - 불리언 계산기 메뉴를 출력하고 테이블 드라이브 선택(Table-Driven Selection) 기법을 사용하여 사용자가 선택한 연산명을 출력하는 프로그램을 작성하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+    menu BYTE "1. x AND y",0Dh,0Ah
+         BYTE "2. x OR y",0Dh,0Ah
+         BYTE "3. NOT x",0Dh,0Ah
+         BYTE "4. x XOR y",0Dh,0Ah
+         BYTE "5. Exit program",0Dh,0Ah
+         BYTE "Enter choice: ",0
+
+    msg1 BYTE "Performing AND operation",0Dh,0Ah,0
+    msg2 BYTE "Performing OR operation",0Dh,0Ah,0
+    msg3 BYTE "Performing NOT operation",0Dh,0Ah,0
+    msg4 BYTE "Performing XOR operation",0Dh,0Ah,0
+
+    CaseTable BYTE '1'
+              DWORD Process_AND
+              BYTE '2'
+              DWORD Process_OR
+              BYTE '3'
+              DWORD Process_NOT
+              BYTE '4'
+              DWORD Process_XOR
+    EntryCount = 4
+
+.code
+main PROC
+L_MENU:
+    mov edx, OFFSET menu
+    call WriteString
+    call ReadChar
+    call WriteChar
+    call Crlf
+
+    cmp al, '5'
+    je L_EXIT
+
+    mov ebx, OFFSET CaseTable
+    mov ecx, EntryCount
+
+L_LOOP:
+    cmp al, [ebx]
+    jne L_NEXT
+    call NEAR PTR [ebx + 1]
+    jmp L_MENU
+
+L_NEXT:
+    add ebx, 5
+    loop L_LOOP
+    jmp L_MENU
+
+L_EXIT:
+    exit
+main ENDP
+
+Process_AND PROC
+    mov edx, OFFSET msg1
+    call WriteString
+    ret
+Process_AND ENDP
+
+Process_OR PROC
+    mov edx, OFFSET msg2
+    call WriteString
+    ret
+Process_OR ENDP
+
+Process_NOT PROC
+    mov edx, OFFSET msg3
+    call WriteString
+    ret
+Process_NOT ENDP
+
+Process_XOR PROC
+    mov edx, OFFSET msg4
+    call WriteString
+    ret
+Process_XOR ENDP
+
+END main
+[해설] 선택 메뉴 문자와 해당 연산을 처리할 프로시저의 오프셋 주소를 `CaseTable`에 배열로 저장합니다. 입력받은 문자와 테이블을 비교하여 해당 프로시저 주소를 간접 호출(`call NEAR PTR [ebx+1]`)합니다.
+
+6번
+[문제] Boolean Calculator (2) - 5번 문제의 프로그램을 확장하여 16진수 정수를 입력받아 실제로 AND, OR, NOT, XOR 연산을 수행하고 결과를 16진수로 출력하는 프로시저들을 구현하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+    menu BYTE "1. x AND y",0Dh,0Ah
+         BYTE "2. x OR y",0Dh,0Ah
+         BYTE "3. NOT x",0Dh,0Ah
+         BYTE "4. x XOR y",0Dh,0Ah
+         BYTE "5. Exit program",0Dh,0Ah
+         BYTE "Enter choice: ",0
+
+    prompt1 BYTE "Enter first hex integer: ",0
+    prompt2 BYTE "Enter second hex integer: ",0
+    msgRes BYTE "Result: ",0
+
+    CaseTable BYTE '1'
+              DWORD AND_op
+              BYTE '2'
+              DWORD OR_op
+              BYTE '3'
+              DWORD NOT_op
+              BYTE '4'
+              DWORD XOR_op
+    EntryCount = 4
+
+.code
+main PROC
+L_MENU:
+    mov edx, OFFSET menu
+    call WriteString
+    call ReadChar
+    call WriteChar
+    call Crlf
+
+    cmp al, '5'
+    je L_EXIT
+
+    mov ebx, OFFSET CaseTable
+    mov ecx, EntryCount
+
+L_LOOP:
+    cmp al, [ebx]
+    jne L_NEXT
+    call NEAR PTR [ebx + 1]
+    call Crlf
+    jmp L_MENU
+
+L_NEXT:
+    add ebx, 5
+    loop L_LOOP
+    jmp L_MENU
+
+L_EXIT:
+    exit
+main ENDP
+
+AND_op PROC
+    mov edx, OFFSET prompt1
+    call WriteString
+    call ReadHex
+    mov ebx, eax
+
+    mov edx, OFFSET prompt2
+    call WriteString
+    call ReadHex
+
+    and eax, ebx
+    mov edx, OFFSET msgRes
+    call WriteString
+    call WriteHex
+    call Crlf
+    ret
+AND_op ENDP
+
+OR_op PROC
+    mov edx, OFFSET prompt1
+    call WriteString
+    call ReadHex
+    mov ebx, eax
+
+    mov edx, OFFSET prompt2
+    call WriteString
+    call ReadHex
+
+    or eax, ebx
+    mov edx, OFFSET msgRes
+    call WriteString
+    call WriteHex
+    call Crlf
+    ret
+OR_op ENDP
+
+NOT_op PROC
+    mov edx, OFFSET prompt1
+    call WriteString
+    call ReadHex
+
+    not eax
+    mov edx, OFFSET msgRes
+    call WriteString
+    call WriteHex
+    call Crlf
+    ret
+NOT_op ENDP
+
+XOR_op PROC
+    mov edx, OFFSET prompt1
+    call WriteString
+    call ReadHex
+    mov ebx, eax
+
+    mov edx, OFFSET prompt2
+    call WriteString
+    call ReadHex
+
+    xor eax, ebx
+    mov edx, OFFSET msgRes
+    call WriteString
+    call WriteHex
+    call Crlf
+    ret
+XOR_op ENDP
+
+END main
+[해설] `ReadHex`로 16진수 입력값을 받아 각각 비트 논리 연산자(`and`, `or`, `not`, `xor`)를 적용한 뒤 `WriteHex` 명령어로 결과를 16진수 형식으로 출력합니다.
+
+7번
+[문제] Probabilities and Colors - 지정된 확률(White 30%, Blue 10%, Green 60%)에 따라 화면 텍스트 색상을 랜덤하게 설정하여 20줄의 문장을 출력하는 프로그램을 작성하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+    sampleText BYTE "This is a line of random color text.",0
+
+.code
+main PROC
+    call Randomize
+    mov ecx, 20
+
+L1:
+    mov eax, 10
+    call RandomRange
+
+    cmp eax, 2
+    jle COLOR_WHITE
+    cmp eax, 3
+    je COLOR_BLUE
+
+    mov eax, green + (black * 16)
+    jmp SET_COLOR
+
+COLOR_WHITE:
+    mov eax, white + (black * 16)
+    jmp SET_COLOR
+
+COLOR_BLUE:
+    mov eax, blue + (black * 16)
+
+SET_COLOR:
+    call SetTextColor
+    mov edx, OFFSET sampleText
+    call WriteString
+    call Crlf
+    loop L1
+
+    mov eax, lightGray + (black * 16)
+    call SetTextColor
+    exit
+main ENDP
+END main
+[해설] `RandomRange`로 0~9 범위의 무작위 난수를 발생시킵니다. 0~2(30% 확률)는 White, 3(10% 확률)은 Blue, 4~9(60% 확률)는 Green 색상으로 `SetTextColor`를 호출한 뒤 문자열을 출력합니다.
+
+8번
+[문제] Message Encryption - 여러 문자로 구성된 키(Key)를 평문의 길이만큼 반복 적용하며 XOR 연산으로 암호화 및 복호화를 수행하는 프로시저를 작성하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+    plaintext BYTE "This is a Plaintext message",0
+    key BYTE "ABXmv#7",0
+    keyLen DWORD 7
+
+.code
+Encrypt PROC
+    pushad
+    mov esi, OFFSET plaintext
+    mov edi, OFFSET key
+    mov ecx, SIZEOF plaintext - 1
+    xor ebx, ebx
+
+L1:
+    mov al, [esi]
+    mov dl, [edi + ebx]
+    xor al, dl
+    mov [esi], al
+
+    inc esi
+    inc ebx
+    cmp ebx, keyLen
+    jne NEXT
+    xor ebx, ebx
+
+NEXT:
+    loop L1
+
+    popad
+    ret
+Encrypt ENDP
+
+main PROC
+    mov edx, OFFSET plaintext
+    call WriteString
+    call Crlf
+
+    call Encrypt
+    call WriteString
+    call Crlf
+
+    call Encrypt
+    call WriteString
+    call Crlf
+
+    exit
+main ENDP
+END main
+[해설] 평문의 각 문자에 대해 키 문자열의 대응하는 바이트를 XOR 연산합니다. 키의 인덱스(`ebx`)가 키 길이(`keyLen`)에 도달하면 0으로 재설정하여 키를 반복 대입합니다. 동일한 키로 한 번 더 XOR 연산을 수행하면 원본 평문으로 복호화됩니다.
+
+9번
+[문제] Validating a PIN - 5자리 PIN 번호 배열을 전달받아 자릿수별 유효 범위(minRange, maxRange)를 검사하는 Validate_PIN 프로시저를 작성하시오. 범위 오류가 발생하면 1~5 사이의 오류 자릿수 위치를 EAX로 반환하고, 정상이면 0을 반환하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+    minRange BYTE 5, 2, 4, 1, 3
+    maxRange BYTE 9, 5, 8, 4, 6
+
+    pin1 BYTE 5, 2, 4, 1, 3
+    pin2 BYTE 4, 3, 5, 3, 4
+    pin3 BYTE 6, 4, 5, 3, 5
+    pin4 BYTE 7, 3, 6, 2, 4
+
+    msgValid BYTE "Valid PIN",0
+    msgInvalid BYTE "Invalid PIN at digit ",0
+
+.code
+Validate_PIN PROC
+    push ebx
+    push ecx
+    push edx
+    push esi
+
+    mov esi, [esp + 20]
+    mov ecx, 5
+    mov ebx, 0
+
+L1:
+    mov al, [esi + ebx]
+    cmp al, minRange[ebx]
+    jl INVALID
+    cmp al, maxRange[ebx]
+    jg INVALID
+    inc ebx
+    loop L1
+
+    mov eax, 0
+    jmp L_END
+
+INVALID:
+    mov eax, ebx
+    inc eax
+
+L_END:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret 4
+Validate_PIN ENDP
+
+TestPIN PROC
+    push OFFSET pin1
+    call Validate_PIN
+    call PrintResult
+
+    push OFFSET pin2
+    call Validate_PIN
+    call PrintResult
+
+    push OFFSET pin3
+    call Validate_PIN
+    call PrintResult
+
+    push OFFSET pin4
+    call Validate_PIN
+    call PrintResult
+    ret
+TestPIN ENDP
+
+PrintResult PROC
+    cmp eax, 0
+    jne ERR
+    mov edx, OFFSET msgValid
+    call WriteString
+    call Crlf
+    jmp FIN
+
+ERR:
+    mov edx, OFFSET msgInvalid
+    call WriteString
+    call WriteDec
+    call Crlf
+
+FIN:
+    ret
+PrintResult ENDP
+
+main PROC
+    call TestPIN
+    exit
+main ENDP
+END main
+[해설] PIN 배열의 각 인덱스를 순회하면서 미리 정의된 `minRange` 미만이거나 `maxRange` 초과인지를 판별합니다. 유효하지 않은 자릿수를 발견하는 즉시 해당 인덱스+1 값을 EAX에 담아 반환합니다.
+
+10번
+[문제] Parity Checking - 바이트 배열 전체의 비트 합이 짝수 패리티(Even Parity)이면 EAX에 1(True), 홀수 패리티(Odd Parity)이면 0(False)을 반환하는 CheckParity 프로시저를 작성하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+    evenArray BYTE 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+    oddArray  BYTE 1, 2, 3, 4, 5, 6, 7, 8, 9, 11
+
+    msgEven BYTE "Parity is Even (1)",0
+    msgOdd  BYTE "Parity is Odd (0)",0
+
+.code
+CheckParity PROC
+    push ebx
+    push ecx
+    push esi
+
+    mov esi, [esp + 16]
+    mov ecx, [esp + 20]
+    xor al, al
+
+L1:
+    xor al, [esi]
+    inc esi
+    loop L1
+
+    jp IS_EVEN
+    mov eax, 0
+    jmp L_END
+
+IS_EVEN:
+    mov eax, 1
+
+L_END:
+    pop esi
+    pop ecx
+    pop ebx
+    ret 8
+CheckParity ENDP
+
+main PROC
+    push LENGTHOF evenArray
+    push OFFSET evenArray
+    call CheckParity
+
+    cmp eax, 1
+    jne ODD1
+    mov edx, OFFSET msgEven
+    call WriteString
+    call Crlf
+    jmp NEXT1
+ODD1:
+    mov edx, OFFSET msgOdd
+    call WriteString
+    call Crlf
+
+NEXT1:
+    push LENGTHOF oddArray
+    push OFFSET oddArray
+    call CheckParity
+
+    cmp eax, 1
+    jne ODD2
+    mov edx, OFFSET msgEven
+    call WriteString
+    call Crlf
+    jmp NEXT2
+ODD2:
+    mov edx, OFFSET msgOdd
+    call WriteString
+    call Crlf
+
+NEXT2:
+    exit
+main ENDP
+END main
+[해설] 배열 내 모든 바이트 요소를 연속해서 `xor al, [esi]` 연산하면 전체 비트의 패리티 상태가 결정됩니다. `jp`(Jump if Parity / 짝수 패리티 분기) 명령어를 이용해 패리티 플래그(PF) 상태를 확인하여 짝수면 EAX=1, 홀수면 EAX=0을 반환합니다.
