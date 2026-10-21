@@ -1,1 +1,509 @@
 
+1번
+[문제] Draw Text Colors - 루프와 Irvine32 라이브러리의 SetTextColor 프로시저를 사용하여, 동일한 문자열을 4가지의 서로 다른 글자/배경 색상 조합으로 화면에 출력하는 프로그램을 작성하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+str1 BYTE "This text is displayed in different colors!", 0
+colors DWORD yellow + (black * 16), lightGreen + (black * 16), \
+             lightCyan + (black * 16), lightRed + (black * 16)
+
+.code
+main PROC
+    mov ecx, 4
+    mov esi, 0
+
+L1:
+    mov eax, colors[esi * 4]
+    call SetTextColor
+    mov edx, OFFSET str1
+    call WriteString
+    call Crlf
+    inc esi
+    loop L1
+
+    ; 색상 초기화 (흰색 글자 / 검은색 배경)
+    mov eax, white + (black * 16)
+    call SetTextColor
+    exit
+main ENDP
+END main
+[해설] 글자색과 배경색을 지정하는 32비트 색상 상수 배열(`colors`)을 선언합니다. 루프를 순회하면서 `colors` 배열에서 색상 값을 꺼내어 `SetTextColor`를 호출한 뒤 `WriteString`으로 문장 및 줄바꿈을 출력합니다.
+
+2번
+[문제] Linking Array Items - 시작 인덱스(start = 1), 문자 배열(chars), 연결 인덱스 배열(links)이 주어졌을 때, 링크의 순서를 따라 순회하며 올바른 순서대로 문자를 추적하여 새 출력 배열(output)에 순서대로 복사하는 프로그램을 작성하시오. (출력 결과: A, B, C, D, E, F, G, H)
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+start DWORD 1
+chars BYTE  'H','A','C','E','B','D','F','G'
+links DWORD 0, 4, 5, 6, 2, 3, 7, 0
+output BYTE LENGTHOF chars DUP(?)
+
+.code
+main PROC
+    mov esi, start
+    mov edi, OFFSET output
+    mov ecx, LENGTHOF chars
+
+L1:
+    ; 문자 복사
+    mov al, chars[esi]
+    mov [edi], al
+    inc edi
+
+    ; 다음 인덱스로 이동
+    mov esi, links[esi * 4]
+    loop L1
+
+    ; 결과 출력
+    mov edx, OFFSET output
+    mov ecx, LENGTHOF chars
+    call WriteString
+    call Crlf
+
+    exit
+main ENDP
+END main
+[해설] 연결 리스트(Linked List) 방식을 인덱스 기반 배열로 구현한 문제입니다. `start` 위치(1)에서 출발하여 `chars[1]`('A')을 `output` 배열에 복사한 후, `links[1]`의 값인 4를 다음 인덱스(`esi`)로 채택하여 순차적으로 노드를 따라 순회합니다.
+
+3번
+[문제] Simple Addition (1) - 화면을 지우고(Clrscr), 커서를 콘솔 화면의 중앙 근처로 이동시킨 뒤(Gotoxy), 사용자로부터 2개의 정수를 입력받아 두 수의 합을 출력하는 프로그램을 작성하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+prompt1 BYTE "Enter first integer: ", 0
+prompt2 BYTE "Enter second integer: ", 0
+sumMsg  BYTE "The sum is: ", 0
+
+.code
+main PROC
+    call Clrscr
+
+    ; 화면 중앙 부근(행: 10, 열: 20)으로 커서 이동
+    mov dh, 10
+    mov dl, 20
+    call Gotoxy
+
+    ; 첫 번째 정수 입력
+    mov edx, OFFSET prompt1
+    call WriteString
+    call ReadInt
+    mov ebx, eax
+
+    ; 두 번째 정수 입력
+    mov dh, 11
+    mov dl, 20
+    call Gotoxy
+    mov edx, OFFSET prompt2
+    call WriteString
+    call ReadInt
+
+    ; 합산 및 출력
+    add eax, ebx
+    mov dh, 12
+    mov dl, 20
+    call Gotoxy
+    mov edx, OFFSET sumMsg
+    call WriteString
+    call WriteInt
+    call Crlf
+
+    exit
+main ENDP
+END main
+[해설] `Clrscr`로 화면 전체를 지운 뒤 `Gotoxy`(DH=행, DL=열) 프로시저로 지정된 좌표로 커서를 이동합니다. `ReadInt`로 정수를 입력받아 EAX와 EBX에 저장한 후 `add` 연산을 거쳐 `WriteInt`로 합을 출력합니다.
+
+4번
+[문제] Simple Addition (2) - 3번 문제의 코드를 루프 구조와 별도의 덧셈 프로시저(DoAddition)로 분리하여 3회 반복 실행하도록 수정하시오. 매 iteration(반복) 후에는 1.5초(1500ms) 대기 후 화면을 지우도록 작성하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+prompt1 BYTE "Enter first integer: ", 0
+prompt2 BYTE "Enter second integer: ", 0
+sumMsg  BYTE "The sum is: ", 0
+
+.code
+main PROC
+    mov ecx, 3    ; 3회 반복
+
+L1:
+    push ecx
+    call DoAddition
+    mov eax, 1500 ; 결과 확인을 위한 1.5초 대기
+    call Delay
+    call Clrscr
+    pop ecx
+    loop L1
+
+    exit
+main ENDP
+
+DoAddition PROC
+    mov dh, 10
+    mov dl, 20
+    call Gotoxy
+    mov edx, OFFSET prompt1
+    call WriteString
+    call ReadInt
+    mov ebx, eax
+
+    mov dh, 11
+    mov dl, 20
+    call Gotoxy
+    mov edx, OFFSET prompt2
+    call WriteString
+    call ReadInt
+
+    add eax, ebx
+    mov dh, 12
+    mov dl, 20
+    call Gotoxy
+    mov edx, OFFSET sumMsg
+    call WriteString
+    call WriteInt
+    call Crlf
+    ret
+DoAddition ENDP
+END main
+[해설] 덧셈 작업을 담당하는 `DoAddition` 프로시저를 만들고 메인 함수에서 3회 루프를 돌립니다. 루프 내부에서 커스텀 프로시저를 호출한 뒤 `Delay`(EAX=밀리초)로 결과를 일정 시간 동안 보여준 후 `Clrscr`로 화면을 지우고 다음 입력 단계로 이동합니다.
+
+5번
+[문제] BetterRandomRange Procedure - [0, N-1] 범위의 난수를 만드는 기존 RandomRange를 확장하여 [M, N-1] 범위의 난수를 생성하는 BetterRandomRange 프로시저를 작성하시오. (하한 M은 EBX, 상한 N은 EAX로 전달) 50회 루프를 돌며 난수를 테스트하는 코드를 작성하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.code
+main PROC
+    call Randomize
+    mov ecx, 50
+
+L1:
+    mov ebx, -300    ; M (최소)
+    mov eax, 100     ; N (최대)
+    call BetterRandomRange
+    call WriteInt
+    mov al, ' '
+    call WriteChar
+    loop L1
+
+    call Crlf
+    exit
+main ENDP
+
+;---------------------------------------------------
+; BetterRandomRange
+; [M, N-1] 범위의 난수를 생성합니다.
+; 입력: EBX = M (하한), EAX = N (상한)
+; 출력: EAX = 난수
+;---------------------------------------------------
+BetterRandomRange PROC
+    push ebx
+    sub eax, ebx     ; 범위 크기: N - M
+    call RandomRange ; 0 ~ (N - M - 1)
+    add eax, ebx     ; M ~ (N - 1)
+    pop ebx
+    ret
+BetterRandomRange ENDP
+END main
+[해설] 상한 N에서 하한 M을 빼서 범위 크기(N - M)를 계산합니다. `RandomRange`를 수행하면 0 ~ (N - M - 1) 범위의 난수가 EAX에 만들어지며, 여기에 하한 값 M을 더해주어 [M, N - 1]의 임의의 정수 범위를 형성합니다.
+
+6번
+[문제] Random Strings - 길이 L(EAX)과 저장할 바이트 버퍼의 포인터(EDX)를 전달받아 알파벳 대문자('A'~'Z')로만 구성된 무작위 문자열을 생성하는 CreateRandomString 프로시저를 작성하고, 20회 생성 및 출력 테스트를 수행하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+L_LEN = 10
+
+.data
+strBuffer BYTE L_LEN DUP(?), 0
+
+.code
+main PROC
+    call Randomize
+    mov ecx, 20
+
+L1:
+    push ecx
+    mov eax, L_LEN
+    mov edx, OFFSET strBuffer
+    call CreateRandomString
+    
+    mov edx, OFFSET strBuffer
+    call WriteString
+    call Crlf
+    pop ecx
+    loop L1
+
+    exit
+main ENDP
+
+;---------------------------------------------------
+; CreateRandomString
+; 대문자로 구성된 무작위 문자열을 생성합니다.
+; 입력: EAX = 길이 L, EDX = 버퍼 포인터
+;---------------------------------------------------
+CreateRandomString PROC
+    push ecx
+    push esi
+    push eax
+
+    mov ecx, eax
+    mov esi, edx
+
+L1:
+    mov eax, 26
+    call RandomRange ; 0 ~ 25
+    add al, 'A'
+    mov [esi], al
+    inc esi
+    loop L1
+
+    mov BYTE PTR [esi], 0 ; 문자열 끝 널(NULL) 바이트 처리
+    pop eax
+    pop esi
+    pop ecx
+    ret
+CreateRandomString ENDP
+END main
+[해설] `RandomRange`(EAX=26)를 통해 0~25 범위의 숫자를 뽑은 후 알파벳 시작 문자 `'A'`(65)를 더하여 무작위 대문자 문자를 생성합니다. 지정된 길이 L만큼 이를 반복하고 마지막 위치에 ASCII 널 문자인 0을 삽입하여 C 스타일 널 종료 문자열을 완성합니다.
+
+7번
+[문제] Random Screen Locations - 화면 전체 해상도 크기(GetMaxXY) 내에서 무작위 좌표(Gotoxy)를 선정하고, 100밀리초 간격(Delay)으로 단일 문자를 화면 상의 100개 무작위 위치에 출력하는 프로그램을 작성하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+charVal BYTE 'A'
+rows    BYTE ?
+cols    BYTE ?
+
+.code
+main PROC
+    call Randomize
+    call Clrscr
+    call GetMaxXY ; DH = 최대 행(Y), DL = 최대 열(X)
+    mov rows, dh
+    mov cols, dl
+
+    mov ecx, 100
+
+L1:
+    movzx eax, cols
+    call RandomRange
+    mov dl, al      ; 무작위 X 위치
+
+    movzx eax, rows
+    call RandomRange
+    mov dh, al      ; 무작위 Y 위치
+
+    call Gotoxy
+    mov al, charVal
+    call WriteChar
+
+    mov eax, 100    ; 100ms 대기
+    call Delay
+    loop L1
+
+    exit
+main ENDP
+END main
+[해설] `GetMaxXY`로 콘솔 창의 최대 행과 열의 크기를 받아옵니다. `RandomRange`를 활용하여 0~최대 열 범위의 DL 좌표와 0~최대 행 범위의 DH 좌표를 생성한 뒤, `Gotoxy`로 커서를 옮기고 `WriteChar`로 문자를 찍어주는 과정을 100회 반복합니다.
+
+8번
+[문제] Color Matrix - 중첩 루프(Nested Loop)를 사용하여 글자색(0~15)과 배경색(0~15)의 모든 가능한 조합(16 x 16 = 256가지)으로 하나의 문자를 연속 출력하는 컬러 매트릭스 프로그램을 작성하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+charVal BYTE 'A'
+
+.code
+main PROC
+    mov ecx, 16     ; 배경색 (0 ~ 15)
+    mov ebx, 0      ; ebx: 배경색 카운터
+
+L_Back:
+    push ecx
+    mov ecx, 16     ; 글자색 (0 ~ 15)
+    mov edx, 0      ; edx: 글자색 카운터
+
+L_Fore:
+    ; 색상 값 계산: (배경색 * 16) + 글자색
+    mov eax, ebx
+    shl eax, 4      ; ebx * 16
+    add eax, edx
+    call SetTextColor
+
+    mov al, charVal
+    call WriteChar
+
+    inc edx
+    loop L_Fore
+
+    call Crlf
+    inc ebx
+    pop ecx
+    loop L_Back
+
+    ; 기본 색상으로 복원
+    mov eax, white + (black * 16)
+    call SetTextColor
+    exit
+main ENDP
+END main
+[해설] 바깥 루프는 배경색 16가지, 안쪽 루프는 글자색 16가지를 처리합니다. 어셈블리에서 색상 바이너리 표현 공식인 `(배경색 * 16) + 글자색`은 `shl eax, 4` 비트 시프트 연산과 `add` 연산으로 빠르게 계산하여 `SetTextColor`에 대입합니다.
+
+9번
+[문제] Recursive Procedure - 조건문 분기 명령어 없이 오직 `LOOP` 명령어만을 사용하여, 자기 자신을 지정된 카운트(ECX=10)만큼 재귀적으로 호출하는 프로시저(RecursiveProc)를 작성하고, 실행 횟수를 가리키는 `count` 변수를 검증하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+.data
+count DWORD 0
+
+.code
+main PROC
+    mov ecx, 10            ; 재귀 호출 횟수 설정 (10회)
+    call RecursiveProc
+
+    mov eax, count         ; 디버거 또는 출력으로 count 확인 (결과: 10)
+    call WriteDec
+    call Crlf
+    exit
+main ENDP
+
+;---------------------------------------------------
+; RecursiveProc
+; LOOP 명령어만을 활용하여 ECX만큼 재귀 호출을 수행합니다.
+;---------------------------------------------------
+RecursiveProc PROC
+    inc count
+    loop L1
+    jmp L2                 ; ECX가 0에 도달하면 재귀 종료
+
+L1:
+    call RecursiveProc     ; 자기 자신을 호출
+
+L2:
+    ret
+RecursiveProc ENDP
+END main
+[해설] `inc count`로 실행 횟수를 1 올린 후, `loop L1`을 실행합니다. `loop` 명령어는 내부적으로 ECX를 1 줄이고 ECX가 0이 아니면 L1으로 이동합니다. L1에서 자기 자신 `RecursiveProc`을 재귀 호출하므로, ECX가 0에 도달하여 루프를 빠져나올 때까지 지정된 횟수(10회)만큼 재귀 호출이 유지됩니다.
+
+10번
+[문제] Fibonacci Generator - N개의 피보나치 수열 요소를 생성하여 32비트 배열에 저장하는 GenerateFibonacci 프로시저를 작성하시오. N = 47을 대입했을 때 배열의 마지막 값(47번째)이 2,971,215,073이 되는지 검증하는 프로그램을 작성하시오.
+[코드]
+INCLUDE Irvine32.inc
+
+FIB_COUNT = 47
+
+.data
+fibArray DWORD FIB_COUNT DUP(?)
+
+.code
+main PROC
+    mov esi, OFFSET fibArray
+    mov ecx, FIB_COUNT
+    call GenerateFibonacci
+
+    ; 마지막 값(47번째) 출력하여 검증: 2,971,215,073
+    mov eax, fibArray[(FIB_COUNT - 1) * 4]
+    call WriteDec
+    call Crlf
+
+    exit
+main ENDP
+
+;---------------------------------------------------
+; GenerateFibonacci
+; 피보나치 수열 N개를 생성하여 배열에 저장합니다.
+; 입력: ESI = DWORD 배열 포인터, ECX = N (생성할 개수)
+;---------------------------------------------------
+GenerateFibonacci PROC
+    pushad
+
+    mov DWORD PTR [esi], 1        ; F(1) = 1
+    cmp ecx, 1
+    je Quit
+
+    mov DWORD PTR [esi + 4], 1    ; F(2) = 1
+    cmp ecx, 2
+    je Quit
+
+    sub ecx, 2                    ; 앞의 2개 항은 이미 채움
+    add esi, 8
+
+L1:
+    mov eax, [esi - 4]
+    add eax, [esi - 8]
+    mov [esi], eax
+    add esi, 4
+    loop L1
+
+Quit:
+    popad
+    ret
+GenerateFibonacci ENDP
+END main
+[해설] 피보나치 수열의 첫 번째와 두 번째 항 F(1)=1, F(2)=1을 배열 상단에 할당해 두고, 이후 N-2번째까지 루프를 돌면서 이전 두 항의 값 `[esi-4] + [esi-8]`을 더해 현재 배열 인덱스 `[esi]`에 저장하는 알고리즘을 수행합니다. 32비트 부호 없는 정수 최대 범위 내에서 47번째 피보나치 수(2,971,215,073)가 정확히 계산됩니다.
+
+11번
+[문제] Finding Multiples of K - 크기가 N(50)인 바이트 배열 내에서 K의 배수인 인덱스 위치를 찾고, 배수 위치에 해당되는 배열 요소를 1로 설정하는 FindMultiples 프로시저를 작성하시오. (K=2 및 K=3에 대하여 각각 호출하여 검증)
+[코드]
+INCLUDE Irvine32.inc
+
+N_SIZE = 50
+
+.data
+byteArray BYTE N_SIZE DUP(0)
+
+.code
+main PROC
+    ; K = 2 인 경우
+    mov esi, OFFSET byteArray
+    mov ecx, N_SIZE
+    mov ebx, 2
+    call FindMultiples
+
+    ; K = 3 인 경우
+    mov esi, OFFSET byteArray
+    mov ecx, N_SIZE
+    mov ebx, 3
+    call FindMultiples
+
+    exit
+main ENDP
+
+;---------------------------------------------------
+; FindMultiples
+; 배열 내에서 K의 배수 인덱스 위치에 1을 설정합니다.
+; 입력: ESI = 배열 포인터, ECX = N 크기, EBX = K 값
+;---------------------------------------------------
+FindMultiples PROC
+    pushad
+
+    mov edi, 0    ; 인덱스
+
+L1:
+    mov eax, edi
+    mov edx, 0
+    div ebx       ; EAX = 인덱스 / K, EDX = 인덱스 % K
+
+    cmp edx, 0
+    jne Next
+    mov BYTE PTR [esi + edi], 1 ; 나머지가 0이면 배수이므로 1로 설정
+
+Next:
+    inc edi
+    loop L1
+
+    popad
+    ret
+FindMultiples ENDP
+END main
+[해설] 배열 인덱스(0 ~ N-1)를 EBX 값인 K로 나눕니다(`div ebx`). 나머지 값인 EDX가 0이면 해당 인덱스가 K의 배수임을 의미하므로, 해당 배열 오프셋 위치 `[esi + edi]`의 바이트 데이터 값을 1로 변경합니다.
