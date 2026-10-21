@@ -1,1 +1,82 @@
 
+프로그래밍 실습 (Programming Exercises)
+1. 정수 식 계산 (Integer Expression Calculation)
+3.2절의 AddTwo 프로그램을 참고하여, 레지스터를 사용해 다음 수식을 계산하는 프로그램을 작성하시오: A=(A+B)−(C+D). EAX, EBX, ECX, EDX 레지스터에 각각 정수 값을 할당하여 사용하시오.
+
+.data
+	A DWORD 10
+	B DWORD 20
+	C DWORD 30
+	D DWORD 40
+.code
+	main PROC
+		MOV EAX, A
+		MOV EBX, B
+		MOV ECX, C
+		MOV EDX, D
+
+		ADD EAX, EBX
+		ADD ECX, EDX
+		SUB ECX, EAX
+
+		MOV A, ECX
+	main ENDP
+END main
+			
+2. 기호 정수 상수 (Symbolic Integer Constants)
+일주일의 7일(월~일) 전체에 대한 기호 상수(Symbolic Constants)를 정의하는 프로그램을 작성하시오. 그리고 이 기호 상수들을 초기화 값으로 사용하는 배열 변수를 하나 생성하시오.
+; 상수는 위에 적음
+
+MON = 1
+TUE = 2
+WED = 3
+THU = 4
+FRI = 5
+SAT = 6
+SUN = 7
+
+
+.data
+    weekArray BYTE MON, TUE, WED, THU, FRI, SAT, SUN
+.code
+main PROC
+
+main ENDP
+END main       
+
+4. 기호 텍스트 상수 (Symbolic Text Constants)
+여러 개의 문자열 리터럴(따옴표 안의 문자들)에 대한 기호 이름(Symbolic Names)을 정의하는 프로그램을 작성하시오. 작성한 각 기호 이름을 변수 정의 시 사용하시오.
+; 1. 텍스트(문자열) 상징적 이름 정의 (EQU와 <> 사용)
+; 1. str1_text는 상수 이름, EQU < >는 앞으로 내가 str1_text라고 적으면, < > 안에 있는 글자로 그대로 복사해서 붙여넣어 줘
+str1_text EQU <"Enter your name: ", 0> ; "Enter your age" 를 줘
+str2_text EQU <"Enter your age: ", 0> ; ,0은 문자열 종료
+str3_text EQU <"Goodbye!", 0>
+
+; 2. 정의한 텍스트 상수를 변수로 사용하기
+.data
+    prompt1 BYTE str1_text
+    prompt2 BYTE str2_text
+    msgBye  BYTE str3_text
+
+.code
+main PROC
+
+main ENDP
+END main
+
+5. AddTwoSum 리스팅 파일 (Listing File for AddTwoSum)
+AddTwoSum 프로그램에 대한 리스팅 파일(.lst)을 생성하고, 각 명령어마다 생성된 기계어 바이트에 대한 설명을 작성하시오. (일부 바이트 값의 의미는 추측해서 작성해야 할 수도 있습니다.)
+00000000  B8 00000005          mov eax, 5
+00000005  05 00000006          add eax, 6
+mov eax, 5 -> 기계어: B8 00000005
+
+B8: MOV EAX 명령어를 의미하는 기계어 코드(Opcode)입니다.
+00000005: EAX 레지스터에 저장될 32비트 정수 값 5입니다.
+add eax, 6 -> 기계어: 05 00000006
+
+05: ADD EAX 명령어를 의미하는 기계어 코드(Opcode)입니다.
+00000006: EAX 레지스터에 더해질 32비트 정수 값 6입니다.
+
+6. AddVariables 프로그램 (AddVariables Program)
+AddVariables 프로그램이 64비트 변수를 사용하도록 수정하시오. 이 때 어셈블러에 의해 발생하는 구문 오류(Syntax errors)들을 기술하고, 이를 해결하기 위해 어떤 조치를 취했는지 설명하시오.
+(오류: 피연산자의 크기가 일치하지 않습니다)
