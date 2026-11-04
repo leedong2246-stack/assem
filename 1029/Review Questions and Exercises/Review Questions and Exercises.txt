@@ -1,0 +1,124 @@
+1. In the following code sequence, show the value of AL after each shift or rotate instruction
+has executed:
+mov al,0D4h	
+shr al,1 		; a. = 6Ah
+mov al,0D4h
+sar al,1 		; b. = EAh
+mov al,0D4h
+sar al,4 		; c. = FDh
+mov al,0D4h
+rol al,1 		; d. = A9h	
+
+2. In the following code sequence, show the value of AL after each shift or rotate instruction
+has executed:
+mov al,0D4h
+ror al,3 		; a. = 9Ah
+mov al,0D4h
+rol al,7 		; b. = 6Ah
+stc
+mov al,0D4h
+rcl al,1 		; c. = A9h
+stc
+mov al,0D4h
+rcr al,3 		; d. = 9Ah
+
+3. What will be the contents of AX and DX after the following operation?
+mov dx,0
+mov ax,222h
+mov cx,100h
+mul cx
+AX = 2200h, DX = 0002h
+
+4. What will be the contents of AX after the following operation?
+mov ax,63h
+mov bl,10h
+div bl
+AX = 0306h
+
+5. What will be the contents of EAX and EDX after the following operation?
+mov eax,123400h
+mov edx,0
+mov ebx,10h
+div ebx
+
+6. What will be the contents of AX and DX after the following operation?
+mov ax,4000h
+mov dx,500h
+mov bx,10h
+div bx
+AX = 0400h DX = 0000h
+7. What will be the contents of BX after the following instructions execute?
+mov bx,5
+stc
+mov ax,60h
+adc bx,ax
+BX = 0066h
+
+8. Describe the output when the following code executes in 64-bit mode:
+.data
+dividend_hi  QWORD 00000108h
+dividend_lo  QWORD 33300020h
+divisor      QWORD 00000100h
+.code
+mov  rdx,dividend_hi 
+mov  rax,dividend_lo
+div  divisor
+rax = 00000000000108 ,rdx = 0000000033300020h
+9. The following program is supposed to subtract val2 from val1. Find and correct all logic
+errors (CLC clears the Carry flag):
+.data
+val1   QWORD 20403004362047A1h
+val2   QWORD 055210304A2630B2h
+result QWORD 0
+.code
+	mov  cx,8		; loop counter 
+	mov  esi,val1	; set index to start
+	mov  edi,val2
+	clc 			; clear Carry flag
+top:
+	mov  al,BYTE PTR[esi] 	; get first number
+	sbb  al,BYTE PTR[edi] 		; subtract second
+	mov  BYTE PTR[esi],al 	; store the result
+	dec  esi
+	dec  edi
+	loop top
+1. 주소 지정을 위해 OFFSET 키워드가 누락되었습니다.
+2. 다배율(Multi-precision) 뺄셈은 최하위 바이트(LSB)부터 최상위 바이트(MSB) 방향으로 진행해야 하므로 주소를 감소(dec)시키는 것이 아니라 증가(inc)시켜야 합니다.
+3. 32비트 환경에서는 루프 카운터로 CX보다 ECX를 사용하는 것이 올바릅니다.
+
+[수정된 코드]
+.data
+val1   QWORD 20403004362047A1h
+val2   QWORD 055210304A2630B2h
+result QWORD 0
+.code
+	mov  ecx,8             ; 8바이트 반복
+	mov  esi,OFFSET val1   ; val1의 시작 주소 지정
+	mov  edi,OFFSET val2   ; val2의 시작 주소 지정
+	clc                    ; Carry 플래그 초기화
+top:
+	mov  al,BYTE PTR[esi]  ; val1의 1바이트 읽기
+	sbb  al,BYTE PTR[edi]  ; val2의 1바이트 뺄셈 (Carry 포함)
+	mov  BYTE PTR[esi],al  ; 결과를 val1에 저장 (또는 result에 저장)
+	inc  esi               ; 다음 하위->상위 바이트로 이동
+	inc  edi               ; 다음 하위->상위 바이트로 이동
+	loop top
+
+10. What will be the hexadecimal contents of RAX after the following instructions execute in
+64-bit mode?
+.data
+multiplicand QWORD 0001020304050000h
+.code
+imul rax,multiplicand, 4
+
+[정답 및 설명]
+RAX = 0004080C10140000h
+(imul rax, multiplicand, 4는 multiplicand의 값에 4를 곱한 결과를 RAX에 저장합니다.
+0001020304050000h의 각 바이트/숫자에 4를 곱하면 00 04 08 0C 10 14 00 00h가 됩니다.)
+
+
+
+
+
+
+
