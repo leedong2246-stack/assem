@@ -1,0 +1,507 @@
+1. Display ASCII Decimal
+Write a procedure named WriteScaled that outputs a decimal ASCII number with an implied decimal point. Suppose the following number were defined as follows, where DECIMAL_OFFSET indicates that the decimal point must be inserted five positions from the right side of the number:
+
+DECIMAL_OFFSET = 5
+.data
+decimal_one BYTE "100123456789765"
+
+WriteScaled would display the number like this:
+
+1001234567.89765
+When calling WriteScaled, pass the number’s offset in EDX, the number length in ECX, and the decimal offset in EBX. Write a test program that passes three numbers of different sizes to the WriteScaled procedure.
+INCLUDE Irvine32.inc
+
+DECIMAL_OFFSET = 5
+
+.data
+msg1 BYTE "100123456789765", 0
+msg2 BYTE "123456", 0
+msg3 BYTE "98765432109876543210", 0
+
+.code
+main PROC
+    mov edx, OFFSET msg1
+    mov ecx, LENGTHOF msg1 - 1
+    mov ebx, 5
+    call WriteScaled
+    call Crlf
+
+    mov edx, OFFSET msg2
+    mov ecx, LENGTHOF msg2 - 1
+    mov ebx, 2
+    call WriteScaled
+    call Crlf
+
+    mov edx, OFFSET msg3
+    mov ecx, LENGTHOF msg3 - 1
+    mov ebx, 10
+    call WriteScaled
+    call Crlf
+
+    exit
+main ENDP
+
+WriteScaled PROC
+    pushad
+    mov esi, edx
+    mov eax, ecx
+    sub eax, ebx
+    mov edx, eax
+
+    mov edi, 0
+L1:
+    cmp edi, edx
+    jne PrintChar
+    mov al, '.'
+    call WriteChar
+
+PrintChar:
+    mov al, [esi + edi]
+    call WriteChar
+    inc edi
+    cmp edi, ecx
+    jne L1
+
+    popad
+    ret
+WriteScaled ENDP
+END main
+
+2. Extended Subtraction Procedure
+Create a procedure named Extended_Sub that subtracts two binary integers of arbitrary size.
+The storage size of the two integers must be the same, and their size must be a multiple of 32 bits. Write a test program that passes several pairs of integers, each at least 10 bytes long.
+INCLUDE Irvine32.inc
+
+.data
+op1 DWORD 11111111h, 22222222h, 33333333h, 44444444h
+op2 DWORD 00000001h, 11111111h, 11111111h, 11111111h
+result DWORD 4 DUP(0)
+
+.code
+main PROC
+    mov esi, OFFSET op1
+    mov edi, OFFSET op2
+    mov ebx, OFFSET result
+    mov ecx, 4
+    call Extended_Sub
+
+    mov ecx, 4
+    mov esi, OFFSET result
+    add esi, 12
+PrintLoop:
+    mov eax, [esi]
+    call WriteHex
+    sub esi, 4
+    loop PrintLoop
+    call Crlf
+
+    exit
+main ENDP
+
+Extended_Sub PROC
+    pushad
+    clc
+L1:
+    mov eax, [esi]
+    sbb eax, [edi]
+    mov [ebx], eax
+    
+    add esi, 4
+    add edi, 4
+    add ebx, 4
+    loop L1
+
+    popad
+    ret
+Extended_Sub ENDP
+END main
+
+
+3. Packed Decimal Conversion
+Write a procedure named PackedToAsc that converts a 4-byte packed decimal integer to a string of ASCII decimal digits. Pass the packed integer and the address of a buffer holding the ASCII digits to the procedure. Write a short test program that passes at least 5 packed decimal integers to your procedure.
+INCLUDE Irvine32.inc
+
+.data
+packedArray DWORD 12345678h, 90123456h, 05432109h, 99999999h, 00000001h
+buffer BYTE 9 DUP(0)
+
+.code
+main PROC
+    mov ecx, 5
+    mov esi, OFFSET packedArray
+
+TestLoop:
+    push ecx
+    mov eax, [esi]
+    mov edx, OFFSET buffer
+    call PackedToAsc
+
+    mov edx, OFFSET buffer
+    call WriteString
+    call Crlf
+
+    add esi, 4
+    pop ecx
+    loop TestLoop
+
+    exit
+main ENDP
+
+PackedToAsc PROC
+    pushad
+    mov ecx, 4
+    mov edi, edx
+    add edi, 8
+    mov BYTE PTR [edi], 0
+    mov edx, eax
+
+L1:
+    mov al, dl
+    and al, 0Fh
+    add al, '0'
+    dec edi
+    mov [edi], al
+
+    mov al, dl
+    shr al, 4
+    add al, '0'
+    dec edi
+    mov [edi], al
+
+    shr edx, 8
+    loop L1
+
+    popad
+    ret
+PackedToAsc ENDP
+END main
+
+
+4. Encryption Using Rotate Operations
+Write a procedure that performs simple encryption by rotating each plaintext byte a varying
+number of positions in different directions. For example, in the following array that represents the encryption key, a negative value indicates a rotation to the left and a positive value indicates a rotation to the right. The integer in each position indicates the magnitude of the rotation: key BYTE -2, 4, 1, 0, -3, 5, 2, -4, -4, 6
+Your procedure should loop through a plaintext message and align the key to the first 10 bytes of the message. Rotate each plaintext byte by the amount indicated by its matching key array value. Then, align the key to the next 10 bytes of the message and repeat the process. Write a program that tests your encryption procedure by calling it twice, with different data sets.
+INCLUDE Irvine32.inc
+
+.data
+key BYTE -2, 4, 1, 0, -3, 5, 2, -4, -4, 6
+keySize = LENGTHOF key
+
+msg1 BYTE "Hello World! Assembly Language Programming.", 0
+msg2 BYTE "Secret Message 2026!", 0
+
+.code
+main PROC
+    mov edx, OFFSET msg1
+    call WriteString
+    call Crlf
+    mov esi, OFFSET msg1
+    mov ecx, LENGTHOF msg1 - 1
+    call RotateEncrypt
+    mov edx, OFFSET msg1
+    call WriteString
+    call Crlf
+    call Crlf
+
+    mov edx, OFFSET msg2
+    call WriteString
+    call Crlf
+    mov esi, OFFSET msg2
+    mov ecx, LENGTHOF msg2 - 1
+    call RotateEncrypt
+    mov edx, OFFSET msg2
+    call WriteString
+    call Crlf
+
+    exit
+main ENDP
+
+RotateEncrypt PROC
+    pushad
+    mov edi, 0
+
+L1:
+    mov al, [esi]
+    mov bl, key[edi]
+    
+    cmp bl, 0
+    jge RotateRight
+    neg bl
+    mov cl, bl
+    rol al, cl
+    jmp StoreByte
+
+RotateRight:
+    mov cl, bl
+    ror al, cl
+
+StoreByte:
+    mov [esi], al
+    inc esi
+    inc edi
+    cmp edi, keySize
+    jne NextChar
+    mov edi, 0
+
+NextChar:
+    pop ecx
+    dec ecx
+    push ecx
+    jnz L1
+
+    pop ecx
+    popad
+    ret
+RotateEncrypt ENDP
+END main
+
+
+5. Prime Numbers
+Write a program that generates all prime numbers between 2 and 1000, using the Sieve of Era tosthenes method. You can find many articles that describe the method for finding primes in this manner on the Internet. Display all the prime values.
+INCLUDE Irvine32.inc
+
+MAX_NUM = 1000
+
+.data
+sieve BYTE MAX_NUM DUP(0)
+
+.code
+main PROC
+    mov ecx, 2
+
+SieveLoop:
+    mov eax, ecx
+    mul eax
+    cmp eax, MAX_NUM
+    ja DisplayPrimes
+
+    cmp sieve[ecx], 0
+    jne NextI
+
+    mov edi, eax
+MarkLoop:
+    mov sieve[edi], 1
+    add edi, ecx
+    cmp edi, MAX_NUM
+    jbe MarkLoop
+
+NextI:
+    inc ecx
+    jmp SieveLoop
+
+DisplayPrimes:
+    mov ecx, 2
+PrintLoop:
+    cmp sieve[ecx], 0
+    jne SkipPrint
+    mov eax, ecx
+    call WriteDec
+    mov al, ' '
+    call WriteChar
+
+SkipPrint:
+    inc ecx
+    cmp ecx, MAX_NUM
+    jbe PrintLoop
+    call Crlf
+
+    exit
+main ENDP
+END main
+
+
+6. Greatest Common Divisor (GCD)
+The greatest common divisor (GCD) of two integers is the largest integer that will evenly divide both integers. The GCD algorithm involves integer division in a loop, described by the following pseudocode:
+	int GCD(int x, int y)
+	{
+		x = abs(x)			 // absolute value
+		y = abs(y)
+		do {
+			int n = x % y
+			x = y
+			y = n
+		} while (y > 0)
+		return x
+	}
+Implement this function in assembly language and write a test program that calls the function
+several times, passing it different values. Display all results on the screen.
+INCLUDE Irvine32.inc
+
+.code
+main PROC
+    mov eax, 54
+    mov ebx, 24
+    call GCD
+    call WriteDec
+    call Crlf
+
+    mov eax, 42
+    mov ebx, 56
+    call GCD
+    call WriteDec
+    call Crlf
+
+    mov eax, -48
+    mov ebx, 18
+    call GCD
+    call WriteDec
+    call Crlf
+
+    exit
+main ENDP
+
+GCD PROC
+    push edx
+    push ebx
+
+    cmp eax, 0
+    jge AbsY
+    neg eax
+
+AbsY:
+    cmp ebx, 0
+    jge GCDLoop
+    neg ebx
+
+GCDLoop:
+    cmp ebx, 0
+    jbe GCDDone
+    mov edx, 0
+    div ebx
+    mov eax, ebx
+    mov ebx, edx
+    jmp GCDLoop
+
+GCDDone:
+    pop ebx
+    pop edx
+    ret
+GCD ENDP
+END main
+
+
+7. Bitwise Multiplication
+Write a procedure named BitwiseMultiply that multiplies any unsigned 32-bit integer by
+EAX, using only shifting and addition. Pass the integer to the procedure in the EBX register,
+and return the product in the EAX register. Write a short test program that calls the procedure
+and displays the product. (We will assume that the product is never larger than 32 bits.) This is a fairly challenging program to write. One possible approach is to use a loop to shift the mul-tiplier to the right, keeping track of the number of shifts that occur before the Carry flag is set. The resulting shift count can then be applied to the SHL instruction, using the multiplicand as the destination operand. Then, the same process must be repeated until you find the last 1 bit in the multiplier.
+INCLUDE Irvine32.inc
+
+.code
+main PROC
+    mov eax, 15
+    mov ebx, 13
+    call BitwiseMultiply
+    call WriteDec
+    call Crlf
+
+    mov eax, 100
+    mov ebx, 25
+    call BitwiseMultiply
+    call WriteDec
+    call Crlf
+
+    exit
+main ENDP
+
+BitwiseMultiply PROC
+    push edx
+    push ecx
+    
+    mov edx, 0
+
+L1:
+    cmp ebx, 0
+    je Done
+    shr ebx, 1
+    jnc SkipAdd
+    add edx, eax
+
+SkipAdd:
+    shl eax, 1
+    jmp L1
+
+Done:
+    mov eax, edx
+    pop ecx
+    pop edx
+    ret
+BitwiseMultiply ENDP
+END main
+
+8. Add Packed Integers
+Extend the AddPacked procedure from Section 7.6.1 so that it adds two packed decimal inte
+gers of arbitrary size (both lengths must be the same). Write a test program that passes
+AddPacked several pairs of integers: 4-byte, 8-byte, and 16-byte. We suggest that you use the following registers to pass information to the procedure:
+	ESI - pointer to the first number
+	EDI - pointer to the second number
+	EDX - pointer to the sum
+	ECX - number of bytes to add
+INCLUDE Irvine32.inc
+
+.data
+num1_4 BYTE 78h, 56h, 34h, 12h
+num2_4 BYTE 21h, 43h, 65h, 87h
+sum_4  BYTE 4 DUP(0)
+
+num1_8 BYTE 88h, 77h, 66h, 55h, 44h, 33h, 22h, 11h
+num2_8 BYTE 11h, 22h, 33h, 44h, 55h, 66h, 77h, 88h
+sum_8  BYTE 8 DUP(0)
+
+.code
+main PROC
+    mov esi, OFFSET num1_4
+    mov edi, OFFSET num2_4
+    mov edx, OFFSET sum_4
+    mov ecx, 4
+    call AddPacked
+    mov esi, OFFSET sum_4
+    mov ecx, 4
+    call DisplayPacked
+    call Crlf
+
+    mov esi, OFFSET num1_8
+    mov edi, OFFSET num2_8
+    mov edx, OFFSET sum_8
+    mov ecx, 8
+    call AddPacked
+    mov esi, OFFSET sum_8
+    mov ecx, 8
+    call DisplayPacked
+    call Crlf
+
+    exit
+main ENDP
+
+AddPacked PROC
+    pushad
+    clc
+
+L1:
+    mov al, [esi]
+    adc al, [edi]
+    daa
+    mov [edx], al
+
+    inc esi
+    inc edi
+    inc edx
+    loop L1
+
+    popad
+    ret
+AddPacked ENDP
+
+DisplayPacked PROC
+    pushad
+    add esi, ecx
+    dec esi
+L1:
+    mov al, [esi]
+    call WriteHex2
+    dec esi
+    loop L1
+    popad
+    ret
+DisplayPacked ENDP
+END main
