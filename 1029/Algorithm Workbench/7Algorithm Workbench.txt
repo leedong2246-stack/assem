@@ -1,0 +1,110 @@
+1. Write a sequence of shift instructions that cause AX to be sign-extended into EAX. In other words,the sign bit of AX is copied into the upper 16 bits of EAX. Do not use the CWD instruction.
+shl eax, 16
+sar eax, 16
+
+2. Suppose the instruction set contained no rotate instructions. Show how you would use
+SHR and a conditional jump instruction to rotate the contents of the AL register 1 bit to
+the right.
+    shr al, 1
+    jnc L1
+    or  al, 80h
+
+3. Write a logical shift instruction that multiplies the contents of EAX by 16.
+shl eax, 4
+
+4. Write a logical shift instruction that divides EBX by 4.
+shr ebx, 2
+
+5. Write a single rotate instruction that exchanges the high and low halves of the DL register.
+rol dl, 4    ; 또는 ror dl, 4
+
+6. Write a single SHLD instruction that shifts the highest bit of the AX register into the lowest
+bit position of DX and shifts DX one bit to the left.
+shld dx, ax, 1
+
+7. Write a sequence of instructions that shift three memory bytes to the right by 1 bit position.
+Use the following test data:
+byteArray BYTE 81h,20h,33h
+shr byteArray+2, 1
+rcr byteArray+1, 1
+rcr byteArray, 1
+
+8. Write a sequence of instructions that shift three memory words to the left by 1 bit position. Use the following test data:
+wordArray WORD 810Dh, 0C064h,93ABh
+shl wordArray, 1
+rcl wordArray+2, 1
+rcl wordArray+4, 1
+
+9. Write instructions that multiply 5 by 3 and store the result in a 16-bit variable val1.
+mov ax, 5
+mov bx, 3
+mul bx
+mov val1, ax
+
+10. Write instructions that divide 276 by 10 and store the result in a 16-bit variable val1.
+mov dx, 0
+mov ax, 276
+mov cx, 10
+div cx
+mov val1, ax
+
+11. Implement the following C++ expression in assembly language, using 32-bit unsigned
+operands:
+val1 = (val2 * val3) / (val4 - 3)
+mov eax, val2
+mul val3         ; EDX:EAX = val2 * val3
+mov ebx, val4
+sub ebx, 3       ; EBX = val4 - 3
+div ebx          ; EAX = 몫
+mov val1, eax
+
+12. Implement the following C++ expression in assembly language, using 32-bit signed
+operands:
+val1 = (val2 / val3) * (val1 + val2)
+mov eax, val2
+cdq              ; EAX를 EDX:EAX로 부호 확장
+idiv val3        ; EAX = val2 / val3
+mov ebx, val1
+add ebx, val2    ; EBX = val1 + val2
+imul eax, ebx    ; EAX = EAX * EBX
+mov val1, eax
+
+13. Write a procedure that displays an unsigned 8-bit binary value in decimal format. Pass the
+binary value in AL. The input range is limited to 0 to 99, decimal. The only procedure you
+can call from the book’s link library is WriteChar. The procedure should contain approxi
+mately eight instructions. Here is a sample call:
+mov  al,65            ; range limit: 0 to 99 
+call showDecimal8
+showDecimal8 PROC
+    mov ah, 0
+    mov bl, 10
+    div bl          ; AL = 몫(10의 자리), AH = 나머지(1의 자리)
+    add al, '0'     ; 10의 자리 숫자를 아스키 문자로 변환
+    add ah, '0'     ; 1의 자리 숫자를 아스키 문자로 변환
+    mov bl, ah      ; 1의 자리 아스키 문자를 BL에 임시 보관
+    call WriteChar  ; AL(10의 자리) 출력
+    mov al, bl
+    call WriteChar  ; AL(1의 자리) 출력
+    ret
+showDecimal8 ENDP
+
+14. Challenge: Suppose AX contains 0072h and the Auxiliary Carry flag is set as a result of
+adding two unknown ASCII decimal digits. Use the Intel 64 and IA-32 Instruction Set Reference to determine what output the AAA instruction would produce. Explain your answer.
+결과 값: AX = 0108h
+
+15. Challenge: Using only SUB, MOV, and AND instructions, show how to calculate x = n mod y, assuming that you are given the values of n and y. You can assume that n is any 32-bit unsigned integer, and y is a power of 2.
+mov eax, y
+sub eax, 1
+and eax, n
+mov x, eax
+
+16. Challenge: Using only SAR, ADD, and XOR instructions (but no conditional jumps), write
+code that calculates the absolute value of the signed integer in the EAX register. Hints: A
+number can be negated by adding 1 to it and then forming its one’s complement. Also, if
+you XOR an integer with all 1s, its 1s are reversed. On the other hand, if you XOR an inte
+ger with all zeros, the integer is unchanged.
+mov edx, eax
+sar edx, 31
+add eax, edx
+xor eax, edx
+	
