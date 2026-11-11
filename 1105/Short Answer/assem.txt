@@ -1,0 +1,42 @@
+1. Which statements belong in a procedure’s epilogue when the procedure has stack parame
+ters and local variables?
+-> 
+mox esp, ebp
+pop ebp
+ret
+
+2. When a C function returns a 32-bit integer, where is the return value stored?
+-> 
+EAX 레지스터
+
+3. How does a program using the STDCALL calling convention clean up the stack after a pro
+cedure call?
+-> 
+피호출자가 종료 시 ret N 명령어를 실행해서 스택을 관리한다.
+
+4. How is the LEA instruction more powerful than the OFFSET operator?
+-> 
+OFFSET은 컴파일 시점에 결정되는 고정된 라벨 주소만 구할 수 있는 반면, LEA 명령어는 프로그램 실행 시점에 레지스터와 연산자가 조합된 복잡한 주소 연산(간접 주소, 인덱스 주소 등)의 결과를 계산할 수 있습니다.
+
+설명:
+5. In the C++ example shown in Section 8.2.3, how much stack space is used by a variable of
+type int?
+-> 
+ 4바이트 (32비트)
+
+6. What advantages might the C calling convention have over the STDCALL calling
+convention?
+-> 
+가변 인자 함수를 구현할 수 있습니다.
+
+7. (True/False): When using the PROC directive, all parameters must be listed on the same
+line.
+-> False
+
+8. (True/False): If you pass a variable containing the offset of an array of bytes to a procedure
+that expects a pointer to an array of words, the assembler will flag this as an error.
+-> False
+
+9. (True/False): If you pass an immediate value to a procedure that expects a reference param
+eter, you can generate a general-protection fault.
+-> True
