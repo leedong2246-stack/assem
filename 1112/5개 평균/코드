@@ -1,0 +1,48 @@
+
+
+.386
+.model flat, stdcall
+.stack 4096
+
+ExitProcess PROTO, dwExitCode:DWORD
+printf PROTO C :PTR BYTE, :VARARG
+scanf PROTO C :PTR BYTE, :VARARG
+
+includelib kernel32.lib
+includelib msvcrt.lib
+
+.data
+    promptFmt BYTE "%d번째 정수를 입력하세요: ", 0
+    inFmt     BYTE "%d", 0
+    resultFmt BYTE 13, 10, "입력한 5개 정수의 평균은 %d입니다.", 13, 10, 0
+
+    numInput SDWORD ?
+    total    SDWORD 0
+
+.code
+main PROC
+    mov ecx, 5          ; 5번 반복
+    mov ebx, 0          ; 합계 저장
+
+InputLoop:
+    push ecx
+
+    INVOKE printf, ADDR promptFmt, ecx
+    INVOKE scanf, ADDR inFmt, ADDR numInput
+
+    mov eax, numInput
+    add ebx, eax
+
+    pop ecx
+    loop InputLoop
+
+    mov eax, ebx        ; 합계를 EAX에 저장
+    cdq                 ; EDX 확장
+    mov ecx, 5
+    idiv ecx            ; 평균 계산
+
+    INVOKE printf, ADDR resultFmt, eax
+    INVOKE ExitProcess, 0
+
+main ENDP
+END main
