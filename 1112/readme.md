@@ -40,3 +40,22 @@ mov edi,OFFSET target   ;target 변수의 메모리 시작 주소를 EDI 레지�
 cmpsd <br>
 ja L1 <br>  ;비교하는 값은 1234h vs 5678h<br>
 
+LODS = 메모리([ESI])에서 데이터를 읽어 CPU 레지스터(EAX)로 가져오고, ESI 주소를 자동으로 이동시키는 명령어 <br>
+.data <br>
+myString BYTE "HELLO", 0 <br>
+
+.code <br>
+cld                     ; Direction Flag = 0 (순방향, ESI 주소 증가) <br>
+mov esi, OFFSET myString; ESI에 문자열 시작 주소 보관 <br>
+
+lodsb                   ; 1. [ESI]에서 'H'를 읽어 AL에 저장 <br>
+                        ; 2. ESI 주소가 자동으로 +1 증가함 (다음 글자 'E' 위치) <br>
+
+lodsb                   ; 1. [ESI]에서 'E'를 읽어 AL에 저장 <br>
+                        ; 2. ESI 주소가 자동으로 +1 증가함 (다음 글자 'L' 위치) <br>
+
+MUL = ax와 dx를 거쳐서 값을 넣는다 <br>
+INVOKE Str_compare, ADDR STring1, ADDR String2 -> String1과 String2를 비교함 <br>
+String1 < String2 : Carry Flag = 1 , Zero Flag = 0, Branch If True = JB <br>
+String1 = String2 : Carry Flag = 0 , Zero Flag = 1, Branch If True = JE <br>
+String1 > String2 : Carry Flag = 0 , Zero Flag = 0, Branch If True = JA <br>
