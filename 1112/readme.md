@@ -29,4 +29,14 @@ STD → DF = 1 → 주소 감소 (뒤에서 앞으로) <br>
 CL은 clear <br>
 ST는 set <br>
 
-si, di는 주소를 가지고있다  
+si, di는 주소를 가지고있다  <br>
+
+.data <br> 
+source DWORD 1234h   ;4바이트(DWORD) 크기의 source 변수를 선언하고 16진수 1234h (00001234h)를 저장 <br>
+target DWORD 5678h   ;4바이트(DWORD) 크기의 target 변수를 선언하고 16진수 5678h (00005678h)를 저장 <br>
+.code <br>
+mov esi,OFFSET source   ;urce 변수의 메모리 시작 주소를 ESI 레지스터에 넣는다 <br>
+mov edi,OFFSET target   ;target 변수의 메모리 시작 주소를 EDI 레지스터에 넣는다 <br>
+cmpsd <br>
+ja L1 <br>  ;비교하는 값은 1234h vs 5678h<br>
+
