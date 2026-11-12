@@ -59,3 +59,10 @@ INVOKE Str_compare, ADDR STring1, ADDR String2 -> String1과 String2를 비교�
 String1 < String2 : Carry Flag = 1 , Zero Flag = 0, Branch If True = JB <br>
 String1 = String2 : Carry Flag = 0 , Zero Flag = 1, Branch If True = JE <br>
 String1 > String2 : Carry Flag = 0 , Zero Flag = 0, Branch If True = JA <br>
+
+Base-Index -> 두 개의 레지스터(기준점 + 위치)를 합쳐서 메모리 주소를 찾아내는 방식<br>
+Word일 때 <br>
+mov esi, 0 → WORD 배열의 0번째 요소 (array[0])를 가리킴 <br>
+mov esi, 2 → WORD 배열의 1번째 요소 (array[1])를 가리킴 (2바이트 건너뜀) <br>
+
+Sorting하면 searching이 나옴
