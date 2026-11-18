@@ -1,0 +1,123 @@
+1. Show an example of a base-index operand in 32-bit mode.
+-> mov eax, [ebx + esi]
+
+2. Show an example of a base-index-displacement operand in 32-bit mode.
+-> 
+mov eax, arrayName[ebx + esi]
+; 또는
+mov eax, [ebx + esi + 4]
+
+3. Suppose a two-dimensional array of doublewords has three logical rows and four logical columns. Write an expression using ESI and EDI that addresses the third column in the sec-ond row. (Numbering for rows and columns starts at zero.)
+-> 
+; 행 크기 = 4개 열 * 4바이트 = 16바이트
+mov esi, 16    ; 2번째 행 (행 인덱스 1 * 행 크기 16바이트 = 16)
+mov edi, 8     ; 3번째 열 (열 인덱스 2 * 요소 크기 4바이트 = 8)
+
+mov eax, array[esi + edi]  ; 2번째 행, 3번째 열 요소 참조
+
+4. Write instructions using CMPSW that compare two arrays of 16-bit values named sourcew and targetw.
+-> 
+mov esi, OFFSET sourcew
+mov edi, OFFSET targetw
+mov ecx, LENGTHOF sourcew    ; 배열 요소 개수
+cld                          ; 정방향(주소 증가) 설정
+repe cmpsw                   ; 두 배열의 요소를 순서대로 비교
+
+5. Write instructions that use SCASW to scan for the 16-bit value 0100h in an array named wordArray, and copy the offset of the matching member into the EAX register.
+-> 
+mov ax, 0100h                 ; 찾을 16비트 값 설정
+mov edi, OFFSET wordArray     ; 배열 시작 주소
+mov ecx, LENGTHOF wordArray   ; 검색할 요소 개수
+cld                           ; 정방향 설정
+repne scasw                   ; 0100h를 찾을 때까지 반복 비교
+jnz notFound                  ; 찾지 못한 경우 이동
+
+sub edi, 2                    ; SCASW 실행 후 EDI가 2바이트 증가했으므로 차감
+mov eax, edi                  ; 일치하는 요소의 오프셋을 EAX에 저장
+notFound:
+
+6. Write a sequence of instructions that use the Str_compare procedure to determine the larger of two input strings and write it to the console window.
+-> 
+INVOKE Str_compare, ADDR string1, ADDR string2
+ja string1IsLarger           ; string1 > string2 이면 이동
+
+; string2가 더 크거나 같은 경우
+mov edx, OFFSET string2
+jmp printResult
+
+string1IsLarger:
+mov edx, OFFSET string1
+
+printResult:
+call WriteString
+call Crlf
+
+7. Show how to call the Str_trim procedure and remove all trailing "@" characters from a string.
+-> 
+.data
+myString BYTE "Hello World@@@@", 0
+
+.code
+INVOKE Str_trim, ADDR myString, '@'
+
+8. Show how to modify the Str_ucase procedure from the Irvine32 library so it changes all characters to lower case. 
+-> 
+; 기존 대문자 변환 코드의 조건부 범위 판별 및 마스크 연산을 수정합니다.
+Str_lcase PROC USES eax esi
+    mov esi, edx
+L1:
+    mov al, [esi]
+    cmp al, 0               ; 문자열 끝(널) 확인
+    je  L3
+    cmp al, 'A'             ; 'A'보다 작으면 소문자 변환 불필요
+    jb  L2
+    cmp al, 'Z'             ; 'Z'보다 크면 소문자 변환 불필요
+    ja  L2
+    or  BYTE PTR [esi], 00200000b  ; 비트 5를 1로 만들어 소문자로 변환 (또는 add byte ptr [esi], 32)
+L2:
+    inc esi
+    jmp L1
+L3:
+    ret
+Str_lcase ENDP
+
+9. Create a 64-bit version of the Str_trim procedure.
+-> 
+Str_trim64 PROC
+    push rdi
+    push rcx
+    push rax
+
+    mov rdi, rcx            ; RCX = 문자열 주소
+    mov rcx, 0FFFFFFFFFFFFFFFFh
+    mov al, 0
+    cld
+    repne scasb             ; 널(0) 문자 위치 찾기
+    jnz L2                  ; 널 문자가 없으면 종료
+
+    dec rdi
+    dec rdi                 ; EDI를 널 문자 바로 앞 문자로 이동
+
+L1:
+    mov al, [rdi]
+    cmp al, dl              ; RDX(DL) = 제거할 문자
+    jne L2                  ; 지정 문자가 아니면 루프 종료
+    dec rdi                 ; 역방향 이동
+    jmp L1
+
+L2:
+    mov BYTE PTR [rdi + 1], 0  ; 새로운 널 문자 삽입
+
+    pop rax
+    pop rcx
+    pop rdi
+    ret
+Str_trim64 ENDP
+
+10. Show an example of a base-index operand in 64-bit mode.
+-> mov rax, [rbx + rsi]
+11. Assuming that EBX contains a row index into a two-dimensional array of 32-bit integers named myArray and EDI contains the index of a column, write a single statement that moves the content of the given array element into the EAX register.
+-> mov eax, myArray[ebx + edi * 4]
+
+12. Assuming that RBX contains a row index into a two-dimensional array of 64-bit integers named myArray and RDI contains the index of a column, write a single statement that moves the content of the given array element into the RAX register.
+-> mov rax, myArray[rbx + rdi * 8]
