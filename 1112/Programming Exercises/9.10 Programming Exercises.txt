@@ -1,0 +1,1059 @@
+The following exercises can be done in either 32-bit mode or 64-bit mode. Each string-handling procedure assumes the use of null-terminated strings. Even when not explicitly requested, write a short driver program for each exercise solution that tests your new procedure. 
+
+1. Improved Str_copy Procedure
+The Str_copy procedure shown in this chapter does not limit the number of characters to be cop-ied. Create a new version (named Str_copyN) that receives an additional input parameter indi-cating the maximum number of characters to be copied.
+-> 
+INCLUDE Irvine32.inc
+
+Str_copyN PROTO, pTarget:PTR BYTE, pSource:PTR BYTE, maxCount:DWORD
+
+.data
+sourceStr BYTE "Hello, Assembly Language!", 0
+targetStr BYTE 50 DUP(0)
+
+.code
+main PROC
+    INVOKE Str_copyN, ADDR targetStr, ADDR sourceStr, 5
+    mov edx, OFFSET targetStr
+    call WriteString
+    call Crlf
+    exit
+main ENDP
+
+Str_copyN PROC, pTarget:PTR BYTE, pSource:PTR BYTE, maxCount:DWORD
+    push esi
+    push edi
+    push ecx
+
+    mov esi, pSource
+    mov edi, pTarget
+    mov ecx, maxCount
+
+L1:
+    cmp ecx, 0
+    je L2
+    mov al, [esi]
+    mov [edi], al
+    cmp al, 0
+    je L3
+    inc esi
+    inc edi
+    dec ecx
+    jmp L1
+
+L2:
+    mov BYTE PTR [edi], 0    ; 최대 개수에 도달하면 널 문자 추가
+L3:
+    pop ecx
+    pop edi
+    pop esi
+    ret
+Str_copyN ENDP
+END main
+
+2. Str_concat Procedure
+Write a procedure named Str_concat that concatenates a source string to the end of a target string. Sufficient space must exist in the target string to accommodate the new characters. Pass pointers to the source and target strings. Here is a sample call:
+	.data
+	targetStr BYTE "ABCDE",10 DUP(0)
+	sourceStr BYTE "FGH",0
+	.code
+	INVOKE Str_concat, ADDR targetStr, ADDR sourceStr
+->
+INCLUDE Irvine32.inc
+
+Str_concat PROTO, pTarget:PTR BYTE, pSource:PTR BYTE
+
+.data
+targetStr BYTE "ABCDE", 10 DUP(0)
+sourceStr BYTE "FGH", 0
+
+.code
+main PROC
+    INVOKE Str_concat, ADDR targetStr, ADDR sourceStr
+    mov edx, OFFSET targetStr
+    call WriteString           ; "ABCDEFGH" 출력
+    call Crlf
+    exit
+main ENDP
+
+Str_concat PROC, pTarget:PTR BYTE, pSource:PTR BYTE
+    push esi
+    push edi
+
+    mov edi, pTarget
+L1:                            ; targetStr의 널 문자 위치 탐색
+    cmp BYTE PTR [edi], 0
+    je L2
+    inc edi
+    jmp L1
+
+L2:                            ; sourceStr 복사
+    mov esi, pSource
+L3:
+    mov al, [esi]
+    mov [edi], al
+    cmp al, 0
+    je L4
+    inc esi
+    inc edi
+    jmp L3
+
+L4:
+    pop edi
+    pop esi
+    ret
+Str_concat ENDP
+END main
+
+3. Str_remove Procedure
+Write a procedure named Str_remove that removes n characters from a string. Pass a pointer to the position in the string where the characters are to be removed. Pass an integer specifying the number of characters to remove. The following code, for example, shows how to remove “xxxx”
+from target:
+	.data
+	target BYTE "abcxxxxdefghijklmop",0	
+	.code
+	INVOKE Str_remove, ADDR [target+3], 4
+->
+INCLUDE Irvine32.inc
+
+Str_remove PROTO, pTarget:PTR BYTE, nChars:DWORD
+
+.data
+target BYTE "abcxxxxdefghijklmop", 0
+
+.code
+main PROC
+    INVOKE Str_remove, ADDR [target + 3], 4
+    mov edx, OFFSET target
+    call WriteString           ; "abcdefghijklmop" 출력
+    call Crlf
+    exit
+main ENDP
+
+Str_remove PROC, pTarget:PTR BYTE, nChars:DWORD
+    push esi
+    push edi
+
+    mov edi, pTarget           ; 삭제 시작 지점
+    mov esi, pTarget
+    add esi, nChars            ; nChars 만큼 뒤의 지점
+
+L1:                            ; 뒤의 문자들을 앞으로 당겨 덮어쓰기
+    mov al, [esi]
+    mov [edi], al
+    cmp al, 0
+    je L2
+    inc esi
+    inc edi
+    jmp L1
+
+L2:
+    pop edi
+    pop esi
+    ret
+Str_remove ENDP
+END main
+
+4. Str_find Procedure
+Write a procedure named Str_find that searches for the first matching occurrence of a source string inside a target string and returns the matching position. The input parameters should be a pointer to the source string and a pointer to the target string. If a match is found, the procedure sets the Zero flag and EAX points to the matching position in the target string. Otherwise, the Zero flag is clear and EAX is undefined. The following code, for example, searches for “ABC” and returns with EAX pointing to the “A” in the target string:
+	.data
+	target BYTE "123ABC342432",0
+	source BYTE "ABC",0
+	pos    DWORD ?
+	.code
+	INVOKE Str_find, ADDR source, ADDR target	
+	jnz notFound
+	mov pos,eax	; store the position value
+->
+INCLUDE Irvine32.inc
+
+Str_find PROTO, pSource:PTR BYTE, pTarget:PTR BYTE
+
+.data
+target BYTE "123ABC342432", 0
+source BYTE "ABC", 0
+pos    DWORD ?
+
+.code
+main PROC
+    INVOKE Str_find, ADDR source, ADDR target
+    jnz notFound
+    mov pos, eax               ; 매칭 위치 저장
+    mov edx, eax
+    call WriteString           ; "ABC342432" 출력
+    call Crlf
+notFound:
+    exit
+main ENDP
+
+Str_find PROC, pSource:PTR BYTE, pTarget:PTR BYTE
+    push esi
+    push edi
+    push ebx
+
+    mov edi, pTarget
+
+L_Outer:
+    cmp BYTE PTR [edi], 0
+    je L_NotFound
+
+    mov esi, pSource
+    mov ebx, edi
+
+L_Inner:
+    mov al, [esi]
+    cmp al, 0
+    je L_Found                 ; 소스 문자열 끝 도달 -> 찾음!
+    cmp al, [ebx]
+    jne L_Next
+    inc esi
+    inc ebx
+    jmp L_Inner
+
+L_Next:
+    inc edi
+    jmp L_Outer
+
+L_Found:
+    mov eax, edi
+    cmp eax, eax               ; ZF = 1 설정
+    jmp L_Done
+
+L_NotFound:
+    or eax, 1                  ; ZF = 0 설정
+
+L_Done:
+    pop ebx
+    pop edi
+    pop esi
+    ret
+Str_find ENDP
+END main
+
+5. Str_nextWord Procedure
+Write a procedure called Str_nextWord that scans a string for the first occurrence of a certain delimiter character and replaces the delimiter with a null byte. There are two input parameters: a pointer to the string and the delimiter character. After the call, if the delimiter was found, the Zero flag is set and EAX contains the offset of the next character beyond the delimiter. Otherwise, the Zero flag is clear and EAX is undefined. The following example code passes the address of target
+and a comma as the delimiter:
+	.data
+	target BYTE "Johnson,Calvin",0
+	.code
+	INVOKE Str_nextWord, ADDR target, ','
+	jnz notFound
+In Figure 9-5, after calling Str_nextWord, EAX points to the character following the position where the comma was found (and replaced). 
+Figure 9–5 Str_nextWord example.
+		    Null bytes
+J o h n s o n * C a l v i n *
+		    EAX
+-> 
+INCLUDE Irvine32.inc
+
+Str_nextWord PROTO, pTarget:PTR BYTE, delimiter:BYTE
+
+.data
+target BYTE "Johnson,Calvin", 0
+
+.code
+main PROC
+    INVOKE Str_nextWord, ADDR target, ','
+    jnz notFound
+    mov edx, eax               ; EAX는 "Calvin"을 가리킴
+    call WriteString           ; "Calvin" 출력
+    call Crlf
+notFound:
+    exit
+main ENDP
+
+Str_nextWord PROC, pTarget:PTR BYTE, delimiter:BYTE
+    push edi
+
+    mov edi, pTarget
+    mov al, delimiter
+
+L1:
+    mov bl, [edi]
+    cmp bl, 0
+    je L_NotFound
+    cmp bl, al
+    je L_Found
+    inc edi
+    jmp L1
+
+L_Found:
+    mov BYTE PTR [edi], 0      ; 구분자를 널 바이트로 교체
+    inc edi                    ; 구분자 다음 문자를 가리킴
+    mov eax, edi
+    cmp eax, eax               ; ZF = 1 설정
+    jmp L_Done
+
+L_NotFound:
+    or eax, 1                  ; ZF = 0 설정
+
+L_Done:
+    pop edi
+    ret
+Str_nextWord ENDP
+END main
+
+6. Constructing a Frequency Table
+Write a procedure named Get_frequencies that constructs a character frequency table. Input to the procedure should be a pointer to a string and a pointer to an array of 256 doublewords initialized to all zeros. Each array position is indexed by its corresponding ASCII code. When the pro-cedure returns, each entry in the array contains a count of how many times the corresponding character occurred in the string. For example,
+	.data
+	target BYTE "AAEBDCFBBC",0
+	freqTable DWORD 256 DUP(0)
+	.code
+	INVOKE Get_frequencies, ADDR target, ADDR freqTable
+Figure 9-6 shows a picture of the string and entries 41 (hexadecimal) through 4B in the fre-quency table. Position 41 contains the value 2 because the letter A (ASCII code 41h) occurred twice in the string. Similar counts are shown for other characters. Frequency tables are useful in data compression and other applications involving character processing. The Huffman encoding algorithm, for example, stores the most frequently occurring characters in fewer bits than other characters that occur less often.
+Figure 9–6 Sample character frequency table.
+Target string: A A E B D C F B B C 0
+ASCII code: 41 41 45 42 44 43 46 42 42 43 0
+Frequency table: 2 3 2 1 1 1 0 0 0 0 0
+Index:41 42  43 44 45 46 47 48 49 4A 4B ect
+-> 
+INCLUDE Irvine32.inc
+
+Get_frequencies PROTO, pTarget:PTR BYTE, pTable:PTR DWORD
+
+.data
+target BYTE "AAEBDCFBBC", 0
+freqTable DWORD 256 DUP(0)
+
+.code
+main PROC
+    INVOKE Get_frequencies, ADDR target, ADDR freqTable
+    
+    ; 'A' (ASCII 41h)의 빈도수 확인
+    mov esi, OFFSET freqTable
+    mov eax, [esi + 41h * 4]
+    call WriteDec              ; 2 출력
+    call Crlf
+    exit
+main ENDP
+
+Get_frequencies PROC, pTarget:PTR BYTE, pTable:PTR DWORD
+    push esi
+    push edi
+    push eax
+
+    mov esi, pTarget
+    mov edi, pTable
+
+L1:
+    mov zx eax, BYTE PTR [esi] ; ASCII 코드 값 확장
+    cmp al, 0
+    je L2
+    inc DWORD PTR [edi + eax * 4] ; 해당 ASCII 인덱스의 카운트 1 증가
+    inc esi
+    jmp L1
+
+L2:
+    pop eax
+    pop edi
+    pop esi
+    ret
+Get_frequencies ENDP
+END main
+
+7. Sieve of Eratosthenes
+The Sieve of Eratosthenes, invented by the Greek mathematician of the same name, provides a quick way to find all prime numbers within a given range. The algorithm involves creating an array of bytes in which positions are “marked” by inserting 1s in the following manner: Beginning with position 2 (which is a prime number), insert a 1 in each array position that is a multiple of 2. Then do the same thing for multiples of 3, the next prime number. Find the next prime number after 3, which is 5, and mark all positions that are multiples of 5. Proceed in this manner until all multiples of primes have been found. The remaining positions of the array that are unmarked indicate which numbers are prime. For this program, create a 65,000-element array and display all primes between 2 and 65,000. Declare the array in an uninitialized data segment (see Section 3.4.11) and use STOSB to fill it with zeros. 
+-> 
+INCLUDE Irvine32.inc
+
+MAX_SIZE = 65000
+
+.data?
+sieve BYTE MAX_SIZE DUP(?)
+
+.code
+main PROC
+    ; 1. 배열을 0으로 초기화
+    mov edi, OFFSET sieve
+    mov ecx, MAX_SIZE
+    mov al, 0
+    cld
+    rep stosb
+
+    ; 2. 에라토스테네스의 체 알고리즘
+    mov esi, 2
+L_Outer:
+    cmp esi, MAX_SIZE
+    jge L_Display
+
+    cmp sieve[esi], 1         ; 이미 지워진 경우 패스
+    je L_NextOuter
+
+    ; 배수 지우기
+    mov edi, esi
+    add edi, esi
+L_Inner:
+    cmp edi, MAX_SIZE
+    jge L_NextOuter
+    mov sieve[edi], 1          ; 1 = 합성수
+    add edi, esi
+    jmp L_Inner
+
+L_NextOuter:
+    inc esi
+    jmp L_Outer
+
+    ; 3. 소수 출력
+L_Display:
+    mov ecx, 2
+L_Print:
+    cmp ecx, MAX_SIZE
+    jge L_Done
+    cmp sieve[ecx], 0
+    jne L_SkipPrint
+    mov eax, ecx
+    call WriteDec
+    mov al, ' '
+    call WriteChar
+L_SkipPrint:
+    inc ecx
+    jmp L_Print
+
+L_Done:
+    call Crlf
+    exit
+main ENDP
+END main
+
+8. Bubble Sort
+Add a variable to the BubbleSort procedure in Section 9.5.1 that is set to 1 whenever a pair of values is exchanged within the inner loop. Use this variable to exit the sort before its normal completion if you discover that no exchanges took place during a complete pass through the array. (This variable is commonly known as an exchange flag.)
+-> 
+INCLUDE Irvine32.inc
+
+.data
+array DWORD 9, 3, 5, 2, 8, 1, 4, 7, 6
+
+.code
+main PROC
+    mov esi, OFFSET array
+    mov ecx, LENGTHOF array
+    call BubbleSortWithFlag
+
+    ; 정렬 결과 출력
+    mov ecx, LENGTHOF array
+    mov esi, OFFSET array
+L_Show:
+    mov eax, [esi]
+    call WriteDec
+    mov al, ' '
+    call WriteChar
+    add esi, 4
+    loop L_Show
+    call Crlf
+    exit
+main ENDP
+
+BubbleSortWithFlag PROC
+    push eax
+    push ecx
+    push esi
+    dec ecx                    ; N-1 회 반복
+
+L1:
+    push ecx
+    mov edx, 0                 ; edx = exchangeFlag (0으로 초기화)
+    mov edi, esi
+
+L2:
+    mov eax, [edi]
+    cmp eax, [edi + 4]
+    jle L3
+    ; 교환 발생
+    xchg eax, [edi + 4]
+    mov [edi], eax
+    mov edx, 1                 ; 플래그 설정 (교환 발생함)
+
+L3:
+    add edi, 4
+    loop L2
+
+    pop ecx
+    cmp edx, 0                 ; 교환이 없었으면 이미 정렬 완료!
+    je L4
+    loop L1
+
+L4:
+    pop esi
+    pop ecx
+    pop eax
+    ret
+BubbleSortWithFlag ENDP
+END main
+
+9. Binary Search
+Rewrite the binary search procedure shown in this chapter by using registers for mid, first, and last. Add comments to clarify the registers’ usage.
+-> 
+INCLUDE Irvine32.inc
+
+.code
+; EBX = first, EDX = last, ESI = mid, EAX = searchVal
+BinarySearchReg PROC USES ebx edx edi,
+    pArray:PTR DWORD, Count:DWORD, SearchVal:DWORD
+
+    mov ebx, 0                 ; first = 0
+    mov edx, Count
+    dec edx                    ; last = Count - 1
+    mov edi, pArray
+
+L1:
+    cmp ebx, edx               ; while(first <= last)
+    jg L_NotFound
+
+    ; mid = (first + last) / 2
+    mov esi, ebx
+    add esi, edx
+    shr esi, 1
+
+    ; array[mid] 와 searchVal 비교
+    mov eax, SearchVal
+    cmp eax, [edi + esi * 4]
+    je L_Found
+    jg L_Greater
+
+    ; searchVal < array[mid] -> last = mid - 1
+    mov edx, esi
+    dec edx
+    jmp L1
+
+L_Greater:                     ; searchVal > array[mid] -> first = mid + 1
+    mov ebx, esi
+    inc ebx
+    jmp L1
+
+L_Found:
+    mov eax, esi               ; 발견한 인덱스 반환
+    ret
+
+L_NotFound:
+    mov eax, -1                ; 실패 시 -1 반환
+    ret
+BinarySearchReg ENDP
+END
+
+10. Letter Matrix
+Create a procedure that generates a four-by-four matrix of randomly chosen capital letters. When choosing the letters, there must be a 50% probability that the chosen letter is a vowel. Write a test program with a loop that calls your procedure five times and displays each matrix in the console window. Following is sample output for the first three matrices:
+	D W A L
+	S I V W
+	U I O L
+	L A I I
+
+	K X S V
+	N U U O
+	O R Q O
+	A U U T
+
+	P O A Z
+	A E A U
+	G K A E	
+	I A G D
+-> 
+INCLUDE Irvine32.inc
+
+.data
+vowels BYTE "AEIOU"
+vowelCount = $ - vowels
+
+.code
+main PROC
+    call Randomize
+    mov ecx, 5
+
+L_MatrixLoop:
+    push ecx
+    call GenerateMatrix
+    call Crlf
+    pop ecx
+    loop L_MatrixLoop
+    exit
+main ENDP
+
+GenerateMatrix PROC
+    mov ecx, 4
+L_Row:
+    push ecx
+    mov ecx, 4
+L_Col:
+    push ecx
+    
+    ; 50% 확률 결정 (0 또는 1)
+    mov eax, 2
+    call RandomRange
+    cmp eax, 0
+    jne L_Consonant
+
+    ; 모음 생성
+    mov eax, vowelCount
+    call RandomRange
+    mov al, vowels[eax]
+    jmp L_Print
+
+L_Consonant:
+    ; 자음 포함 전체 대문자 중 임의 선택
+    mov eax, 26
+    call RandomRange
+    add al, 'A'
+
+L_Print:
+    call WriteChar
+    mov al, ' '
+    call WriteChar
+    pop ecx
+    loop L_Col
+
+    call Crlf
+    pop ecx
+    loop L_Row
+    ret
+GenerateMatrix ENDP
+END main
+
+11. Letter Matrix/Sets with Vowels
+Use the letter matrix generated in the previous programming exercise as a starting point for this program. Generate a single random four-by-four letter matrix in which each letter has a 50% prob-ability of being a vowel. Traverse each matrix row, column, and diagonal, generating sets of letters. Display only four-letter sets containing exactly two vowels. Suppose, for example, the following matrix was generated:
+	P O A Z
+	A E A U
+	G K A E
+	I A G D
+Then the four-letter sets displayed by the program would be POAZ, GKAE, IAGD, PAGI, ZUED, PEAD, and ZAKI. The order of letters within each set is unimportant.
+-> 
+INCLUDE Irvine32.inc
+
+.data
+matrix      BYTE 16 DUP(?)       ; 4x4 행렬 (16바이트)
+vowels      BYTE "AEIOU", 0      ; 모음 판별용 문자열
+vowelCount  DWORD 5
+sampleSet   BYTE 5 DUP(0)        ; 검사할 4글자 임시 저장용 (널 termination 포함)
+
+msgMatrix   BYTE "=== 생성된 4x4 행렬 ===", 13, 10, 0
+msgResult   BYTE 13, 10, "=== 모음이 정확히 2개인 4글자 세트 ===", 13, 10, 0
+
+.code
+main PROC
+    call Randomize
+
+    ; 1. 4x4 행렬 생성 및 출력
+    call GenerateMatrix
+    
+    mov edx, OFFSET msgMatrix
+    call WriteString
+    call DisplayMatrix
+
+    ; 2. 조건에 맞는 4글자 세트 탐색 및 출력
+    mov edx, OFFSET msgResult
+    call WriteString
+
+    call CheckRows
+    call CheckCols
+    call CheckDiagonals
+
+    exit
+main ENDP
+
+; ---------------------------------------------------
+; GenerateMatrix: 50% 확률로 모음이 배치된 4x4 행렬 생성
+; ---------------------------------------------------
+GenerateMatrix PROC
+    push ecx
+    push esi
+    mov esi, OFFSET matrix
+    mov ecx, 16
+
+L_Gen:
+    mov eax, 2
+    call RandomRange            ; 0 또는 1 (50% 확률)
+    cmp eax, 0
+    jne L_Consonant
+
+    ; 모음 선택
+    mov eax, vowelCount
+    call RandomRange
+    mov al, vowels[eax]
+    jmp L_Save
+
+L_Consonant:
+    ; 임의의 대문자 선택
+    mov eax, 26
+    call RandomRange
+    add al, 'A'
+
+L_Save:
+    mov [esi], al
+    inc esi
+    loop L_Gen
+
+    pop esi
+    pop ecx
+    ret
+GenerateMatrix ENDP
+
+; ---------------------------------------------------
+; DisplayMatrix: 4x4 행렬 화면 출력
+; ---------------------------------------------------
+DisplayMatrix PROC
+    push ecx
+    push esi
+    mov esi, OFFSET matrix
+    mov ecx, 4
+
+L_Row:
+    push ecx
+    mov ecx, 4
+L_Col:
+    mov al, [esi]
+    call WriteChar
+    mov al, ' '
+    call WriteChar
+    inc esi
+    loop L_Col
+
+    call Crlf
+    pop ecx
+    loop L_Row
+
+    pop esi
+    pop ecx
+    ret
+DisplayMatrix ENDP
+
+; ---------------------------------------------------
+; IsVowel: AL에 들어있는 문자가 모음이면 ZF=1, 아니면 ZF=0
+; ---------------------------------------------------
+IsVowel PROC
+    push ecx
+    push edi
+    mov edi, OFFSET vowels
+    mov ecx, 5
+    cld
+    repne scasb
+    pop edi
+    pop ecx
+    ret
+IsVowel ENDP
+
+; ---------------------------------------------------
+; EvaluateAndPrintSet: sampleSet에 저장된 4글자 중
+;                      모음이 정확히 2개면 출력
+; ---------------------------------------------------
+EvaluateAndPrintSet PROC
+    push esi
+    push ecx
+    push edx
+
+    mov esi, OFFSET sampleSet
+    mov ecx, 4
+    mov edx, 0                  ; EDX = 모음 카운터
+
+L_Count:
+    mov al, [esi]
+    call IsVowel
+    jnz L_Next
+    inc edx                     ; 모음이면 카운트 1 증가
+
+L_Next:
+    inc esi
+    loop L_Count
+
+    ; 모음 개수가 정확히 2개인지 확인
+    cmp edx, 2
+    jne L_SkipPrint
+
+    ; 4글자 세트 출력
+    mov edx, OFFSET sampleSet
+    call WriteString
+    call Crlf
+
+L_SkipPrint:
+    pop edx
+    pop ecx
+    pop esi
+    ret
+EvaluateAndPrintSet ENDP
+
+; ---------------------------------------------------
+; CheckRows: 4개 행 검사
+; ---------------------------------------------------
+CheckRows PROC
+    push ecx
+    push esi
+    push edi
+
+    mov esi, 0                  ; 행 시작 인덱스 (0, 4, 8, 12)
+    mov ecx, 4
+
+L_RowLoop:
+    push ecx
+    mov edi, 0
+    mov ecx, 4
+
+L_ColLoop:
+    mov al, matrix[esi + edi]
+    mov sampleSet[edi], al
+    inc edi
+    loop L_ColLoop
+
+    call EvaluateAndPrintSet
+
+    add esi, 4
+    pop ecx
+    loop L_RowLoop
+
+    pop edi
+    pop esi
+    pop ecx
+    ret
+CheckRows ENDP
+
+; ---------------------------------------------------
+; CheckCols: 4개 열 검사
+; ---------------------------------------------------
+CheckCols PROC
+    push ecx
+    push esi
+    push edi
+
+    mov esi, 0                  ; 열 번호 (0, 1, 2, 3)
+    mov ecx, 4
+
+L_ColLoop:
+    push ecx
+    mov edi, 0
+    mov ecx, 4
+
+L_RowLoop:
+    ; 행 오프셋 = edi * 4
+    mov eax, edi
+    shl eax, 2
+    add eax, esi
+    mov al, matrix[eax]
+    mov sampleSet[edi], al
+    inc edi
+    loop L_RowLoop
+
+    call EvaluateAndPrintSet
+
+    inc esi
+    pop ecx
+    loop L_ColLoop
+
+    pop edi
+    pop esi
+    pop ecx
+    ret
+CheckCols ENDP
+
+; ---------------------------------------------------
+; CheckDiagonals: 2개 대각선 검사
+; ---------------------------------------------------
+CheckDiagonals PROC
+    push edi
+
+    ; 1. 주대각선 (0, 5, 10, 15 번 인덱스)
+    mov al, matrix[0]
+    mov sampleSet[0], al
+    mov al, matrix[5]
+    mov sampleSet[1], al
+    mov al, matrix[10]
+    mov sampleSet[2], al
+    mov al, matrix[15]
+    mov sampleSet[3], al
+    call EvaluateAndPrintSet
+
+    ; 2. 부대각선 (3, 6, 9, 12 번 인덱스)
+    mov al, matrix[3]
+    mov sampleSet[0], al
+    mov al, matrix[6]
+    mov sampleSet[1], al
+    mov al, matrix[9]
+    mov sampleSet[2], al
+    mov al, matrix[12]
+    mov sampleSet[3], al
+    call EvaluateAndPrintSet
+
+    pop edi
+    ret
+CheckDiagonals ENDP
+
+END main
+
+12. Calculating the Sum of an Array Row
+Write a procedure named calc_row_sum that calculates the sum of a single row in a two-dimensional array of bytes, words, or doublewords. The procedure should have the following stack parame-ters: array offset, row size, array type, row index. It must return the sum in EAX. Use explicit stack parameters, not INVOKE or extended PROC. Write a program that tests your procedure with arrays of byte, word, and doubleword. Prompt the user for the row index, and display the sum of the selected row.
+-> 
+INCLUDE Irvine32.inc
+
+.data
+bArray BYTE  10, 20, 30, 40
+       BYTE  50, 60, 70, 80    ; 1번째 행 합 = 260
+
+.code
+main PROC
+    ; 매개변수 스택 푸시
+    push OFFSET bArray         ; Array Offset [ebp+20]
+    push 4                     ; Row Size [ebp+16]
+    push TYPE bArray           ; Array Type (1) [ebp+12]
+    push 1                     ; Row Index (1번째 행) [ebp+8]
+
+    call calc_row_sum
+    call WriteDec              ; 260 출력
+    call Crlf
+    exit
+main ENDP
+
+calc_row_sum PROC
+    push ebp
+    mov ebp, esp
+    push ebx
+    push esi
+    push ecx
+
+    mov ebx, [ebp + 20]        ; array offset
+    mov eax, [ebp + 8]         ; row index
+    mov edx, [ebp + 16]        ; row size
+    mul edx                    ; eax = row index * row size (바이트 오프셋)
+
+    add ebx, eax               ; ebx = 해당 행의 시작 주소
+    mov esi, 0
+    mov eax, 0                 ; 합계 누적용 (EAX = 0)
+    mov ecx, [ebp + 16]        ; 반복 바이트 수
+
+    mov edx, [ebp + 12]        ; array type (1, 2, 4)
+    cmp edx, 1
+    je L_Byte
+    cmp edx, 2
+    je L_Word
+    jmp L_Dword
+
+L_Byte:
+    mov zx edx, BYTE PTR [ebx + esi]
+    add eax, edx
+    inc esi
+    loop L_Byte
+    jmp L_Done
+
+L_Word:
+    ; (Word / Dword 처리 동일 원리로 적용)
+L_Dword:
+
+L_Done:
+    pop ecx
+    pop esi
+    pop ebx
+    pop ebp
+    ret 16                     ; 매개변수 4개(16바이트) 스택 정리
+calc_row_sum ENDP
+END main
+
+13. Trimming Leading Characters
+Create a variant of the Str_trim procedure that lets the caller remove all instances of a leading character from a string. For example, if you were to call it with a pointer to the string “###ABC” and pass it the # character, the resulting string would be “ABC.”
+-> 
+INCLUDE Irvine32.inc
+
+Str_trim_leading PROTO, pString:PTR BYTE, charToTrim:BYTE
+
+.data
+targetStr BYTE "###ABC", 0
+
+.code
+main PROC
+    INVOKE Str_trim_leading, ADDR targetStr, '#'
+    mov edx, OFFSET targetStr
+    call WriteString           ; "ABC" 출력
+    call Crlf
+    exit
+main ENDP
+
+Str_trim_leading PROC, pString:PTR BYTE, charToTrim:BYTE
+    push esi
+    push edi
+    push eax
+
+    mov esi, pString
+    mov al, charToTrim
+
+L1:                            ; 선두 지정 문자 건너뛰기
+    cmp [esi], al
+    jne L2
+    inc esi
+    jmp L1
+
+L2:                            ; 남은 문자열을 맨 앞으로 이동 복사
+    mov edi, pString
+L3:
+    mov bl, [esi]
+    mov [edi], bl
+    cmp bl, 0
+    je L4
+    inc esi
+    inc edi
+    jmp L3
+
+L4:
+    pop eax
+    pop edi
+    pop esi
+    ret
+Str_trim_leading ENDP
+END main
+
+14. Trimming a Set of Characters
+Create a variant of the Str_trim procedure that lets the caller remove all instances of a set of characters from the end of a string. For example, if you were to call it with a pointer to the string “ABC#$&” and pass it a pointer to an array of filter characters containing “%#!;$&*”, the result-ing string would be “ABC”
+-> 
+INCLUDE Irvine32.inc
+
+Str_trim_set PROTO, pString:PTR BYTE, pFilter:PTR BYTE
+
+.data
+targetStr BYTE "ABC#$&", 0
+filterStr BYTE "%#!;$&*", 0
+
+.code
+main PROC
+    INVOKE Str_trim_set, ADDR targetStr, ADDR filterStr
+    mov edx, OFFSET targetStr
+    call WriteString           ; "ABC" 출력
+    call Crlf
+    exit
+main ENDP
+
+Str_trim_set PROC, pString:PTR BYTE, pFilter:PTR BYTE
+    push esi
+    push edi
+    push eax
+
+    ; 1. targetStr 끝 지점 찾기
+    mov edi, pString
+L_FindEnd:
+    cmp BYTE PTR [edi], 0
+    je L_StartTrim
+    inc edi
+    jmp L_FindEnd
+
+L_StartTrim:
+    dec edi                    ; 널 문자 바로 앞 문자 위치
+
+L_TrimLoop:
+    cmp edi, pString
+    jb L_Done
+
+    mov al, [edi]              ; 대상 문자
+
+    ; 2. 필터 세트에 al이 포함되어 있는지 확인
+    mov esi, pFilter
+L_CheckFilter:
+    mov bl, [esi]
+    cmp bl, 0
+    je L_Done                  ; 필터에 없으면 제거 종료
+    cmp al, bl
+    je L_MatchFound            ; 일치하는 필터 발견!
+    inc esi
+    jmp L_CheckFilter
+
+L_MatchFound:
+    mov BYTE PTR [edi], 0      ; 문자 제거 (널 삽입)
+    dec edi                    ; 더 앞으로 이동하여 탐색
+    jmp L_TrimLoop
+
+L_Done:
+    pop eax
+    pop edi
+    pop esi
+    ret
+Str_trim_set ENDP
+END main
