@@ -1,0 +1,29 @@
+1. Which Direction flag setting causes index registers to move backward through memory when executing string primitives?
+-> 1 (Set 상태) 또는 STD 명령어 적용
+2. When a repeat prefix is used with STOSW, what value is added to or subtracted from the index register?
+-> 2
+3. In what way is the CMPS instruction ambiguous?
+-> 어느 쪽 피연산자에서 어느 쪽 피연산자를 빼서 비교하는지 이름만으로 명확히 드러나지 않는 점.
+4. When the Direction flag is clear and SCASB has found a matching character, where does EDI point?
+-> 일치하는 문자가 위치한 주소의 바로 다음 바이트(1바이트 뒤)
+5. When scanning an array for the first occurrence of a particular character, which repeat pre-fix would be best?
+-> REPNE (또는 REPNZ)
+6. What Direction flag setting is used in the Str_trim procedure from Section 9.3?
+-> 1 (Set 상태 / STD 명령어 사용)
+7. Why does the Str_trim procedure from Section 9.3 use the JNE instruction?
+-> 공백 문자가 아닌 일반 문자를 만났을 때 트림(삭제) 루프를 종료하기 위해 사용합니다.
+8. What happens in the Str_ucase procedure from Section 9.3 if the target string contains a digit?
+-> 아무런 변경 없이 그대로 유지됩니다.
+9. If the Str_length procedure from Section 9.3 used SCASB, which repeat prefix would be most appropriate?
+-> REPNE (또는 REPNZ)
+10. If the Str_length procedure from Section 9.3 used SCASB, how would it calculate and return the string length?
+->  탐색 완료 후 EDI 주소에서 시작 주소(또는 시작 오프셋 + 1)를 빼서 구하거나, 시작할 때 설정했던 ECX 초깃값에서 탐색 후 남은 ECX 값을 뺀 뒤 1을 빼서 구합니다.
+
+11. What is the maximum number of comparisons needed by the binary search algorithm when an array contains 1,024 elements?
+-> 11회
+12. In the FillArray procedure from the Binary Search example in Section 9.5, why must the Direction flag be cleared by the CLD instruction?
+-> 배열 요소를 순차적으로 채울 때 EDI 레지스터 주소가 낮은 주소에서 높은 주소로 증가(정방향)하도록 보장하기 위해서입니다.
+13. In the BinarySearch procedure from Section 9.5, why could the statement at label L2 beremoved without affecting the outcome?
+-> 이전 조건문들(크다/작다 비교)을 모두 통과하고 내려온 흐름 자체가 이미 '값이 일치함'을 의미하므로, 별도의 추가
+14. In the BinarySearch procedure from Section 9.5, how might the statement at label L4 be eliminated?
+-> 루프 끝부분의 무조건 점프(JMP) 흐름을 재배치하거나 탐색 범위 갱신 로직을 조건부 구조로 합쳐서 중복되거나 불필요한 점프 문을 단순화(리팩토링)하면 제거할 수 있습니다.
