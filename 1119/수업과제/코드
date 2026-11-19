@@ -1,0 +1,113 @@
+.386
+.model flat, c
+.stack 4096
+
+; Visual Studio C Runtime 및 Win32 라이브러리 연결
+includelib ucrt.lib
+includelib legacy_stdio_definitions.lib
+includelib msvcrt.lib
+includelib kernel32.lib
+
+; ExitProcess는 C가 아닌 stdcall 규약을 사용해야 링커 에러가 나지 않습니다.
+ExitProcess PROTO stdcall, dwExitCode:DWORD
+printf      PROTO C, format:PTR BYTE, args:VARARG
+scanf       PROTO C, format:PTR BYTE, args:VARARG
+
+.data
+    num1 DWORD ?
+    num2 DWORD ?
+
+    sumResult DWORD ?
+    subResult SDWORD ?
+    mulResult DWORD ?
+    divResult SDWORD ?
+    remResult SDWORD ?
+
+    regAX WORD ?
+    regBX WORD ?
+    regCX WORD ?
+    regDX WORD ?
+
+    ; 서식 지정자 문자열
+    fmtIn  BYTE "%u", 0
+    fmtStr BYTE "%s", 0
+
+    msg1 BYTE "Enter first number: ", 0
+    msg2 BYTE "Enter second number: ", 0
+
+    msgAdd BYTE "Addition: %u", 13, 10, 0
+    msgSub BYTE "Subtraction: %d", 13, 10, 0
+    msgMul BYTE "Multiplication: %u", 13, 10, 0
+    msgDiv BYTE "Division: %u", 13, 10, 0
+    msgRem BYTE "Remainder: %u", 13, 10, 0
+
+    msgAX BYTE "AX = %u", 13, 10, 0
+    msgBX BYTE "BX = %u", 13, 10, 0
+    msgCX BYTE "CX = %u", 13, 10, 0
+    msgDX BYTE "DX = %u", 13, 10, 0
+
+.code
+main PROC
+
+    ; 1. 첫 번째 숫자 입력
+    INVOKE printf, ADDR fmtStr, ADDR msg1
+    INVOKE scanf, ADDR fmtIn, ADDR num1
+
+    ; 2. 두 번째 숫자 입력
+    INVOKE printf, ADDR fmtStr, ADDR msg2
+    INVOKE scanf, ADDR fmtIn, ADDR num2
+
+    ; 덧셈
+    mov eax, num1
+    add eax, num2
+    mov sumResult, eax
+
+    ; 뺄셈
+    mov eax, num1
+    sub eax, num2
+    mov subResult, eax
+
+    ; 곱셈
+    mov eax, num1
+    mov ebx, num2
+    mul ebx
+    mov mulResult, eax
+
+    ; 나눗셈
+    mov eax, num1
+    mov ebx, num2
+    mov edx, 0
+    div ebx
+    mov divResult, eax
+    mov remResult, edx
+
+    ; 레지스터 값 저장
+    mov regAX, ax
+    mov regBX, bx
+    mov regCX, cx
+    mov regDX, dx
+
+    ; 3. 연산 결과 출력
+    INVOKE printf, ADDR msgAdd, sumResult
+    INVOKE printf, ADDR msgSub, subResult
+    INVOKE printf, ADDR msgMul, mulResult
+    INVOKE printf, ADDR msgDiv, divResult
+    INVOKE printf, ADDR msgRem, remResult
+
+    ; 4. 레지스터 내용 출력
+    movzx eax, regAX
+    INVOKE printf, ADDR msgAX, eax
+
+    movzx eax, regBX
+    INVOKE printf, ADDR msgBX, eax
+
+    movzx eax, regCX
+    INVOKE printf, ADDR msgCX, eax
+
+    movzx eax, regDX
+    INVOKE printf, ADDR msgDX, eax
+
+    INVOKE ExitProcess, 0
+
+main ENDP
+END main
