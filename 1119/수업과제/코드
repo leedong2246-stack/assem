@@ -8,18 +8,18 @@ includelib legacy_stdio_definitions.lib
 includelib msvcrt.lib
 includelib kernel32.lib
 
-; ExitProcess는 C가 아닌 stdcall 규약을 사용해야 링커 에러가 나지 않습니다.
 ExitProcess PROTO stdcall, dwExitCode:DWORD
 printf      PROTO C, format:PTR BYTE, args:VARARG
 scanf       PROTO C, format:PTR BYTE, args:VARARG
 
 .data
-    num1 DWORD ?
-    num2 DWORD ?
+    ; 음수 저장을 위해 SDWORD(부호 있는 32비트 정수)로 선언
+    num1 SDWORD ?
+    num2 SDWORD ?
 
-    sumResult DWORD ?
+    sumResult SDWORD ?
     subResult SDWORD ?
-    mulResult DWORD ?
+    mulResult SDWORD ?
     divResult SDWORD ?
     remResult SDWORD ?
 
@@ -28,32 +28,32 @@ scanf       PROTO C, format:PTR BYTE, args:VARARG
     regCX WORD ?
     regDX WORD ?
 
-    ; 서식 지정자 문자열
-    fmtIn  BYTE "%u", 0
+    ; %d 서식 지정자 사용 (부호 있는 10진수로 입출력)
+    fmtIn  BYTE "%d", 0
     fmtStr BYTE "%s", 0
 
     msg1 BYTE "Enter first number: ", 0
     msg2 BYTE "Enter second number: ", 0
 
-    msgAdd BYTE "Addition: %u", 13, 10, 0
+    msgAdd BYTE "Addition: %d", 13, 10, 0
     msgSub BYTE "Subtraction: %d", 13, 10, 0
-    msgMul BYTE "Multiplication: %u", 13, 10, 0
-    msgDiv BYTE "Division: %u", 13, 10, 0
-    msgRem BYTE "Remainder: %u", 13, 10, 0
+    msgMul BYTE "Multiplication: %d", 13, 10, 0
+    msgDiv BYTE "Division: %d", 13, 10, 0
+    msgRem BYTE "Remainder: %d", 13, 10, 0
 
-    msgAX BYTE "AX = %u", 13, 10, 0
-    msgBX BYTE "BX = %u", 13, 10, 0
-    msgCX BYTE "CX = %u", 13, 10, 0
-    msgDX BYTE "DX = %u", 13, 10, 0
+    msgAX BYTE "AX = %d", 13, 10, 0
+    msgBX BYTE "BX = %d", 13, 10, 0
+    msgCX BYTE "CX = %d", 13, 10, 0
+    msgDX BYTE "DX = %d", 13, 10, 0
 
 .code
 main PROC
 
-    ; 1. 첫 번째 숫자 입력
+    ; 1. 첫 번째 정수 입력 (%d)
     INVOKE printf, ADDR fmtStr, ADDR msg1
     INVOKE scanf, ADDR fmtIn, ADDR num1
 
-    ; 2. 두 번째 숫자 입력
+    ; 2. 두 번째 정수 입력 (%d)
     INVOKE printf, ADDR fmtStr, ADDR msg2
     INVOKE scanf, ADDR fmtIn, ADDR num2
 
@@ -67,44 +67,44 @@ main PROC
     sub eax, num2
     mov subResult, eax
 
-    ; 곱셈
+    ; 부호 있는 곱셈 (imul 사용)
     mov eax, num1
     mov ebx, num2
-    mul ebx
+    imul ebx
     mov mulResult, eax
 
-    ; 나눗셈
+    ; 부호 있는 나눗셈 (cdq + idiv 사용)
     mov eax, num1
+    cdq                 ; EAX의 부호 비트를 EDX:EAX로 확장
     mov ebx, num2
-    mov edx, 0
-    div ebx
+    idiv ebx            ; 부호 있는 나눗셈 (EAX: 몫, EDX: 나머지)
     mov divResult, eax
     mov remResult, edx
 
-    ; 레지스터 값 저장
+    ; 레지스터 값 16비트 저장
     mov regAX, ax
     mov regBX, bx
     mov regCX, cx
     mov regDX, dx
 
-    ; 3. 연산 결과 출력
+    ; 3. 연산 결과 출력 (%d 서식)
     INVOKE printf, ADDR msgAdd, sumResult
     INVOKE printf, ADDR msgSub, subResult
     INVOKE printf, ADDR msgMul, mulResult
     INVOKE printf, ADDR msgDiv, divResult
     INVOKE printf, ADDR msgRem, remResult
 
-    ; 4. 레지스터 내용 출력
-    movzx eax, regAX
+    ; 4. 레지스터 내용 출력 (movsx로 부호 확장 후 %d 출력)
+    movsx eax, regAX
     INVOKE printf, ADDR msgAX, eax
 
-    movzx eax, regBX
+    movsx eax, regBX
     INVOKE printf, ADDR msgBX, eax
 
-    movzx eax, regCX
+    movsx eax, regCX
     INVOKE printf, ADDR msgCX, eax
 
-    movzx eax, regDX
+    movsx eax, regDX
     INVOKE printf, ADDR msgDX, eax
 
     INVOKE ExitProcess, 0
