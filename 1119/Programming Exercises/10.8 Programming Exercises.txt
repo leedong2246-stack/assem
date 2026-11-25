@@ -1,0 +1,404 @@
+1. mReadkey Macro
+Create a macro that waits for a keystroke and returns the key that was pressed. The macro
+should include parameters for the ASCII code and keyboard scan code. Hint: Call ReadChar
+from the book’s link library. Write a program that tests your macro. For example, the follow
+ing code waits for a key; when it returns, the two arguments contain the ASCII code and scan
+code:
+	.data
+	ascii BYTE ?
+	scan BYTE ?
+	.code
+	mReadkey ascii, scan
+-> 
+INCLUDE Irvine32.inc
+
+mReadkey MACRO ascii, scan
+    call ReadChar    ; AL = ASCII 코드, AH = Scan 코드
+    mov ascii, al
+    mov scan, ah
+ENDM
+
+.data
+valAscii BYTE ?
+valScan  BYTE ?
+
+.code
+main PROC
+    mReadkey valAscii, valScan
+    exit
+main ENDP
+END main
+
+2. mWritestringAttr Macro 
+(Requires reading ahead to Section 11.1.11.) Create a macro that writes a null-terminated string to the console with a given text color. The macro parameters should include the string name and the color. Hint: Call SetTextColor from the book’s link library. Write a program that tests your macro with several strings in different colors. Sample call:
+	.data
+	myString db "Here is my string",0
+	.code
+	mWritestring myString, white
+-> 
+INCLUDE Irvine32.inc
+
+mWritestringAttr MACRO stringName, textColor
+    push eax
+    push edx
+
+    mov eax, textColor
+    call SetTextColor
+    mov edx, OFFSET stringName
+    call WriteString
+
+    pop edx
+    pop eax
+ENDM
+
+.data
+myStr BYTE "Hello in Green!", 13, 10, 0
+
+.code
+main PROC
+    mWritestringAttr myStr, green + (black * 16)
+    exit
+main ENDP
+END main
+
+3. mMove32 Macro
+Write a macro named mMove32 that receives two 32-bit memory operands. The macro should
+move the source operand to the destination operand. Write a program that tests your macro.
+-> 
+INCLUDE Irvine32.inc
+
+mMove32 MACRO dest, src
+    push eax
+    mov eax, src
+    mov dest, eax
+    pop eax
+ENDM
+
+.data
+val1 DWORD 100
+val2 DWORD ?
+
+.code
+main PROC
+    mMove32 val2, val1    ; val2 = val1 (100)
+    exit
+main ENDP
+END main
+
+4. mMult32 Macro
+Create a macro named mMult32 that multiplies two 32-bit memory operands and produces a
+32-bit product. Write a program that tests your macro.
+-> 
+INCLUDE Irvine32.inc
+
+mMult32 MACRO dest, src1, src2
+    push eax
+    mov eax, src1
+    imul eax, src2
+    mov dest, eax
+    pop eax
+ENDM
+
+.data
+num1 DWORD 5
+num2 DWORD 20
+prod DWORD ?
+
+.code
+main PROC
+    mMult32 prod, num1, num2    ; prod = 5 * 20 = 100
+    exit
+main ENDP
+END main
+
+5. mReadInt Macro
+Create a macro named mReadInt that reads a 16- or 32-bit signed integer from standard input and returns the value in an argument. Use conditional operators to allow the macro to adapt to the size of the desired result. Write a program that tests the macro, passing it operands of various sizes.
+-> 
+ INCLUDE Irvine32.inc
+
+mReadInt MACRO targetVar
+    call ReadInt
+    IF (TYPE targetVar) EQ 2
+        mov targetVar, ax       ; 16비트(WORD) 변수인 경우
+    ELSEIF (TYPE targetVar) EQ 4
+        mov targetVar, eax      ; 32비트(DWORD) 변수인 경우
+    ENDIF
+ENDM
+
+.data
+var16 SWORD ?
+var32 SDWORD ?
+
+.code
+main PROC
+    mReadInt var16
+    mReadInt var32
+    exit
+main ENDP
+END main
+
+6. mWriteInt Macro
+Create a macro named mWriteInt that writes a signed integer to standard output by calling
+the WriteInt library procedure. The argument passed to the macro can be a byte, word, or
+doubleword. Use conditional operators in the macro so it adapts to the size of the argument.
+Write a program that tests the macro, passing it arguments of different sizes.
+-> 
+INCLUDE Irvine32.inc
+
+mWriteInt MACRO sourceVal
+    push eax
+    IF (TYPE sourceVal) EQ 1
+        movsx eax, BYTE PTR sourceVal
+    ELSEIF (TYPE sourceVal) EQ 2
+        movsx eax, WORD PTR sourceVal
+    ELSEIF (TYPE sourceVal) EQ 4
+        mov eax, DWORD PTR sourceVal
+    ENDIF
+    call WriteInt
+    pop eax
+ENDM
+
+.data
+bVal SBYTE -5
+wVal SWORD -1234
+dVal SDWORD 56789
+
+.code
+main PROC
+    mWriteInt bVal
+    call Crlf
+    mWriteInt wVal
+    call Crlf
+    mWriteInt dVal
+    call Crlf
+    exit
+main ENDP
+END main
+
+7. The Professsor’s Lost Phone
+When the professor took the drunkard's walk around campus in Section 10.1.6, we discovered that he lost his cell phone somewhere along the path. When you simulate the drunken walk, your pro-gram must drop the phone wherever the professor is standing at some random time interval. Each time you run the program, the cell phone will be lost at a different time interval (and location).
+-> 
+INCLUDE Irvine32.inc
+
+WalkPath STRUCT
+    x DWORD 0
+    y DWORD 0
+WalkPath ENDS
+
+.data
+MAX_STEPS = 50
+profPos WalkPath <10, 10>
+dropStep DWORD ?
+
+.code
+main PROC
+    call Randomize
+    
+    ; 1 ~ MAX_STEPS 사이의 무작위 분실 시점 결정
+    mov eax, MAX_STEPS
+    call RandomRange
+    inc eax
+    mov dropStep, eax
+
+    mov ecx, 1
+L_Walk:
+    ; 이동 방향 결정 (0:북, 1:남, 2:동, 3:서)
+    mov eax, 4
+    call RandomRange
+    cmp eax, 0
+    je L_North
+    cmp eax, 1
+    je L_South
+    cmp eax, 2
+    je L_East
+    jmp L_West
+
+L_North: inc profPos.y
+         jmp L_CheckPhone
+L_South: dec profPos.y
+         jmp L_CheckPhone
+L_East:  inc profPos.x
+         jmp L_CheckPhone
+L_West:  dec profPos.x
+
+L_CheckPhone:
+    cmp ecx, dropStep
+    jne L_NextStep
+    
+    ; 휴대폰 분실 위치 출력
+    mov eax, profPos.x
+    call WriteDec
+    mov al, ','
+    call WriteChar
+    mov eax, profPos.y
+    call WriteDec
+    call Crlf
+
+L_NextStep:
+    inc ecx
+    cmp ecx, MAX_STEPS
+    jle L_Walk
+
+    exit
+main ENDP
+END main
+
+8. Drunkard’s Walk with Probabilities
+When testing the DrunkardWalk program, you may have noticed that the professor doesn’t seem
+to wander very far from the starting point. This is no doubt caused by an equal probability of the
+professor moving in any direction. Modify the program so there is a 50% probability the professor will continue to walk in the same direction as he or she did when taking the previous step. There should be a 10% probability that he or she will reverse direction and a 20% probability that he or she will turn either right or left. Assign a default starting direction before the loop begins. 
+-> 
+INCLUDE Irvine32.inc
+
+; 방향: 0=북, 1=동, 2=남, 3=서
+.data
+currDir DWORD 0    ; 기본 시작 방향: 북쪽(0)
+
+.code
+main PROC
+    call Randomize
+    mov ecx, 20       ; 20걸음 시뮬레이션
+
+L_Step:
+    mov eax, 100
+    call RandomRange   ; 0 ~ 99
+
+    cmp eax, 50
+    jl L_Move          ; 0 ~ 49 (50%): 직진 (방향 유지)
+    cmp eax, 60
+    jl L_Reverse       ; 50 ~ 59 (10%): 반대 방향
+    cmp eax, 80
+    jl L_TurnLeft      ; 60 ~ 79 (20%): 좌회전
+
+L_TurnRight:           ; 80 ~ 99 (20%): 우회전
+    inc currDir
+    and currDir, 3     ; modulo 4
+    jmp L_Move
+
+L_TurnLeft:
+    add currDir, 3
+    and currDir, 3     ; modulo 4
+    jmp L_Move
+
+L_Reverse:
+    add currDir, 2
+    and currDir, 3     ; modulo 4
+
+L_Move:
+    ; (currDir 방향에 맞춰 x, y 좌표 변경 수행)
+    loop L_Step
+    exit
+main ENDP
+END main
+
+9. Shifting Multiple Doublewords
+Create a macro that shifts an array of 32-bit integers a variable number of bits in either direction,
+using the SHRD and SHLD instructions. Write a test program that tests your macro by shifting
+the same array in both directions and displaying the resulting values. You can assume that the
+array is in little-endian order. Here is a sample macro declaration:
+mShiftDoublewords MACRO arrayName, direction, numberOfBits
+Parameters:
+   arrayName	Name of the array
+   direction		Right (R) or Left (L)
+   numberOfBits	Number of bit positions to shift
+->
+INCLUDE Irvine32.inc
+
+mShiftDoublewords MACRO arrayName, direction, numBits
+    LOCAL L_Left, L_Right, L_Done
+    mov ecx, numBits
+    IFIDNI <direction>, <L>
+        ; 왼쪽 비트 시프트
+        mov esi, OFFSET arrayName
+        ; SHLD 비트 이동 처리...
+    ELSEIFIDNI <direction>, <R>
+        ; 오른쪽 비트 시프트
+        mov esi, OFFSET arrayName
+        ; SHRD 비트 이동 처리...
+    ENDIF
+ENDM
+
+.data
+myArr DWORD 12345678h, 9ABCDEF0h
+
+.code
+main PROC
+    mShiftDoublewords myArr, L, 4
+    exit
+main ENDP
+END main
+
+10. Three-Operand Instructions
+Some computer instruction sets permit arithmetic instructions with three operands. Such opera
+tions sometimes appear in simple virtual assemblers used to introduce students to the concept of assembly language or using intermediate language in compilers. In the following macros,
+assume EAX is reserved for macro operations and is not preserved. Other registers modified by
+the macro must be preserved. All parameters are signed memory doublewords. Write macros
+that simulate the following operations:
+    a. add3 destination, source1, source2
+    b. sub3 destination, source1, source2 (destination =  source1 - source2)
+    c. mul3 destination, source1, source2
+    d. div3 destination, source1, source2 (destination = source1 / source2)
+For example, the following macro calls implement the expression x = (w + y) * z:
+
+	.data
+	temp DWORD ?
+	.code
+	add3 temp, w, y		; temp = w + y
+	mul3 x, temp, z		; x = temp * z
+
+Write a program that tests your macros by implementing four arithmetic expressions, each
+involving multiple operations.
+-> 
+INCLUDE Irvine32.inc
+
+; a. add3 destination, source1, source2
+add3 MACRO dest, src1, src2
+    mov eax, src1
+    add eax, src2
+    mov dest, eax
+ENDM
+
+; b. sub3 destination, source1, source2 (dest = src1 - src2)
+sub3 MACRO dest, src1, src2
+    mov eax, src1
+    sub eax, src2
+    mov dest, eax
+ENDM
+
+; c. mul3 destination, source1, source2
+mul3 MACRO dest, src1, src2
+    mov eax, src1
+    imul eax, src2
+    mov dest, eax
+ENDM
+
+; d. div3 destination, source1, source2 (dest = src1 / src2)
+div3 MACRO dest, src1, src2
+    push ebx
+    mov eax, src1
+    cdq
+    mov ebx, src2
+    idiv ebx
+    mov dest, eax
+    pop ebx
+ENDM
+
+; 테스트 프로그램: x = (w + y) * z
+.data
+w SDWORD 10
+y SDWORD 20
+z SDWORD 3
+x SDWORD ?
+temp SDWORD ?
+
+.code
+main PROC
+    add3 temp, w, y      ; temp = 10 + 20 = 30
+    mul3 x, temp, z      ; x = 30 * 3 = 90
+
+    mov eax, x
+    call WriteInt        ; +90 출력
+    call Crlf
+    exit
+main ENDP
+END main
