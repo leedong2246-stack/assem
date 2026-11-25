@@ -1,0 +1,200 @@
+1. Create a structure named SampleStruct containing two fields: field1, a single 16-bit WORD, and field2, an array of 20 32-bit DWORDs. The initial values of the fields may be left undefined.
+-> 
+SampleStruct STRUCT
+    field1 WORD ?
+    field2 DWORD 20 DUP(?)
+SampleStruct ENDS
+
+2. Write a statement that retrieves the wHour field of a SYSTEMTIME structure.
+-> 
+mov ax, sysTime.wHour
+
+3. Using the following Triangle structure, declare a structure variable and initialize its vertices
+to (0,0), (5, 0), and (7,6):
+	Triangle STRUCT
+		Vertex1 COORD <>
+		Vertex2 COORD <>
+		Vertex3 COORD <>
+	Triangle ENDS
+-> 
+.data
+myTriangle Triangle <<0,0>, <5,0>, <7,6>>
+
+4. Declare an array of Triangle structures. Write a loop that initializes Vertex1 of each triangle
+to random coordinates in the range (0...10, 0...10).
+-> 
+.data
+TRIANGLE_COUNT = 10
+triangles Triangle TRIANGLE_COUNT DUP(<>)
+
+.code
+mov ecx, TRIANGLE_COUNT
+mov esi, OFFSET triangles
+
+L1:
+    ; X 좌표 무작위 생성 (0 ~ 10)
+    mov eax, 11
+    call RandomRange
+    mov (Triangle PTR [esi]).Vertex1.X, ax
+
+    ; Y 좌표 무작위 생성 (0 ~ 10)
+    mov eax, 11
+    call RandomRange
+    mov (Triangle PTR [esi]).Vertex1.Y, ax
+
+    ; 다음 Triangle 요소로 이동
+    add esi, SIZEOF Triangle
+    loop L1
+
+5. Write a macro named mPrintChar that displays a single character on the screen. It should
+have two parameters: this first specifies the character to be displayed and the second speci
+fies how many times the character should be repeated. Here is a sample call:
+	mPrintChar 'X',20
+-> 
+mPrintChar MACRO charValue, repeatCount
+    LOCAL L1
+    push ecx
+    push eax
+
+    mov ecx, repeatCount
+    mov al, charValue
+L1:
+    call WriteChar
+    loop L1
+
+    pop eax
+    pop ecx
+ENDM
+
+6. Write a macro named mGenRandom that generates a random integer between 0 and n 1.
+Let n be the only parameter.
+-> 
+mGenRandom MACRO n
+    mov eax, n
+    call RandomRange    ; EAX에 0 ~ (n-1) 무작위 정수 생성 결과 저장
+ENDM
+
+7. Write a macro named mPromptInteger that displays a prompt and inputs an integer from
+the user. Pass it a string literal and the name of a doubleword variable. Sample call:
+.data
+minVal DWORD ?
+.code
+mPromptInteger "Enter the minimum value", minVal
+-> 
+mPromptInteger MACRO promptText, targetVar
+    LOCAL promptStr
+    .data
+    promptStr BYTE promptText, 0
+
+    .code
+    push edx
+    mov edx, OFFSET promptStr
+    call WriteString
+    call ReadInt
+    mov targetVar, eax
+    pop edx
+ENDM
+
+8. Write a macro named mWriteAt that locates the cursor and writes a string literal to the console
+window. Suggestion: Invoke the mGotoxy and mWrite macros from the book’s macro library.
+-> 
+mWriteAt MACRO X, Y, text
+    mGotoxy X, Y
+    mWrite text
+ENDM
+
+9. Show the expanded code produced by the following statement that invokes the mWrite
+String macro from Section 10.2.5:
+mWriteStr namePrompt
+-> 
+push edx
+mov edx, OFFSET namePrompt
+call WriteString
+pop edx
+
+10. Show the expanded code produced by the following statement that invokes the mRead
+String macro from Section 10.2.5:
+mReadStr customerName
+-> 
+push ecx
+push edx
+mov edx, OFFSET customerName
+mov ecx, SIZEOF customerName
+call ReadString
+pop edx
+pop ecx
+
+11. Write a macro named mDumpMemx that receives a single parameter, the name of a variable.
+Your macro must call the mDumpMem macro from the book’s library, passing it the variable’s
+offset, number of units, and unit size. Demonstrate a call to the mDumpMemx macro.
+-> 
+; 1. 매크로 정의
+mDumpMemx MACRO varName
+    mDumpMem OFFSET varName, LENGTHOF varName, TYPE varName
+ENDM
+
+; 2. 호출 예시
+.data
+myArray DWORD 10, 20, 30, 40
+
+.code
+mDumpMemx myArray
+
+12. Show an example of a macro parameter having a default argument initializer.
+-> 
+mWriteStr MACRO buffer:=<defaultPrompt>
+    push edx
+    mov edx, OFFSET buffer
+    call WriteString
+    pop edx
+ENDM
+
+13. Write a short example that uses the IF, ELSE, and ENDIF directives.
+-> 
+mCheckSize MACRO valSize
+    IF valSize GT 4
+        mov eax, 1     ; 4바이트 초과일 때
+    ELSE
+        mov eax, 0     ; 4바이트 이하일 때
+    ENDIF
+ENDM
+
+14. Write a statement using the IF directive that checks the value of the constant macro parame
+ter Z; if Z is less than zero, display a message during assembly indicating that Z is invalid.
+-> 
+IF Z LT 0
+    ECHO Error: Invalid value for Z (Z must be >= 0)!
+ENDIF
+
+15. Write a short macro that demonstrates the use of the & operator when the macro parameter
+is embedded in a literal string.
+-> 
+mMakeMessage MACRO msgNum
+    msg&msgNum BYTE "This is log message number &msgNum", 0
+ENDM
+
+16. Assume the following mLocate macro definition:
+	mLocate MACRO xval,yval
+		IF xval LT 0	;; xval < 0?
+			EXITM	;; if so, exit
+		ENDIF
+		IF yval LT 0	;; yval < 0?
+			EXITM	;; if so, exit
+		ENDIF
+		mov bx,0		;; video page 0
+		mov ah,2		;; locate cursor
+		mov dh,yval
+		mov dl,xval
+		int 10h		;; call the BIOS
+	ENDM
+Show the source code generated by the preprocessor when the macro is expanded by each of
+the following statements:
+.data
+row BYTE 15
+col BYTE 60
+.code
+mLocate -2,20
+mLocate 10,20
+mLocate col,row
+->
+; (xval = -2 < 0 조건이 참이 되어 EXITM에 의해 어셈블리가 조기 종료되므로 생성되는 코드가 없습니다)
