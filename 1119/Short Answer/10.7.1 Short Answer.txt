@@ -1,0 +1,39 @@
+1. What is the purpose of the STRUCT directive?
+-> 사용자 정의 데이터 타입인 구조체(Structure)를 정의하기 위해서 사용됩니다.
+
+2. Assume that the following structure has been defined:
+RentalInvoice STRUCT
+	invoiceNum BYTE 5 DUP(' ')
+	dailyPrice WORD ?
+	daysRented WORD ?
+RentalInvoice ENDS
+State whether or not each of the following declarations is valid:
+a.    rentals RentalInvoice <> -> Valid 
+b.   RentalInvoice rentals <> -> Invalid  
+c.    march RentalInvoice <'12345',10,0> -> Valid 
+d.    RentalInvoice <,10,0> -> Invalid  
+e.    current RentalInvoice <,15,0,0> -> Invalid  
+
+3. (True/False): A macro cannot contain data definitions.
+->  False
+
+4. What is the purpose of the LOCAL directive?
+-> 매크로를 여러 번 호출할 때 발생할 수 있는 코드 라벨 이름의 중복에러를 방지하기 위해 사용된다.
+
+5. Which directive displays a message on the console during the assembly step?
+-> ECHO 
+
+6. Which directive marks the end of a conditional block of statements?
+-> ENDIF
+
+7. List all the relational operators that can be used in constant boolean expressions.
+-> EQ, NE, LT, LE, GT, GE
+
+8. What is the purpose of the & operator in a macro definition?
+-> 매크로 매개변수를 다른 텍스트나 문자열과 구분을 모호하지 않게 서로 결합하기 위해 사용됩니다.
+
+9. What is the purpose of the ! operator in a macro definition?
+-> 특수 문자를 매크로 기호로 해석하지 않고, 있는 그대로의 문자로 다루도록 지정할 때 사용됩니다.
+
+10. What is the purpose of the % operator in a macro definition?
+-> 매크로에 전달되는 상수 표현식이나 함수를 매크로가 전개되기 전에 텍스트 숫자/결과 값으로 즉시 계산하여 전달하기 위해 사용됩니다.
